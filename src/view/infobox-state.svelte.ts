@@ -10,7 +10,7 @@ export class InfoboxModel {
   vm = $state<InfoboxViewModel | null>(null);
   /** Problems from the anchor block's options, shown inline. */
   errors = $state<string[]>([]);
-  arrayStyle = $state<ArrayStyle>("comma");
+  arrayStyle = $state<ArrayStyle>("list");
 }
 
 /**

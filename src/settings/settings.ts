@@ -1,6 +1,7 @@
 export type Placement = "right" | "left" | "full";
 export type LivePreviewPresentation = "full-width" | "aligned";
-export type ArrayStyle = "comma" | "chips";
+export type ArrayStyle = "list" | "comma" | "chips";
+export type TextAlign = "left" | "center" | "right";
 
 export interface InfoboxSettings {
   placement: Placement;
@@ -12,6 +13,8 @@ export interface InfoboxSettings {
   /** Frontmatter keys never rendered as fields. */
   excludeKeys: string[];
   arrayStyle: ArrayStyle;
+  /** Alignment of the property-label column (Race, Class, …). */
+  labelAlign: TextAlign;
   showTags: boolean;
   titleKey: string;
   subtitleKey: string;
@@ -25,7 +28,8 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   width: "22em",
   fontSize: "0.9em",
   excludeKeys: ["tags", "aliases", "cssclasses", "infobox", "position"],
-  arrayStyle: "comma",
+  arrayStyle: "list",
+  labelAlign: "left",
   showTags: true,
   titleKey: "title",
   subtitleKey: "subtitle",
