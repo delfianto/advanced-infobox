@@ -1,0 +1,26 @@
+# deps
+node_modules
+
+# tests
+coverage
+
+# build
+dist
+main.js
+*.js.map
+
+# obsidian
+data.json
+
+# dev
+/.envrc
+
+# macos
+*.DS_Store
+
+# test vault
+test-vault/.obsidian/workspace
+test-vault/.obsidian/workspace.json
+test-vault/.obsidian/plugins/advanced-infobox/*.css
+test-vault/.obsidian/plugins/advanced-infobox/*.js
+test-vault/.obsidian/plugins/advanced-infobox/*.json

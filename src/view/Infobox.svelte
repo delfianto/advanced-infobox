@@ -1,0 +1,100 @@
+<script lang="ts">
+  import type { FieldValue } from "src/model/values";
+  import type { InfoboxModel, RenderContext } from "src/view/infobox-state.svelte";
+
+  let { model, ctx }: { model: InfoboxModel; ctx: RenderContext } = $props();
+
+  const vm = $derived(model.vm);
+  const tagsMarkdown = $derived(
+    vm && vm.tags.length > 0 ? vm.tags.map((t) => `#${t}`).join(" ") : "",
+  );
+</script>
+
+{#snippet md(text: string)}
+  <span class="aib-md" {@attach (el: HTMLElement) => ctx.renderMarkdown(text, el)}></span>
+{/snippet}
+
+{#snippet fieldValue(value: FieldValue)}
+  {#if value.kind === "markdown"}
+    {@render md(value.markdown)}
+  {:else if value.kind === "number"}
+    <span class="aib-number">{value.value.toLocaleString()}</span>
+  {:else if value.kind === "boolean"}
+    <span class="aib-bool" class:aib-bool-true={value.value}>{value.value ? "✓" : "✗"}</span>
+  {:else if value.kind === "list"}
+    {#if model.arrayStyle === "chips"}
+      <span class="aib-chips">
+        {#each value.items as item, i (i)}
+          <span class="aib-chip">{@render fieldValue(item)}</span>
+        {/each}
+      </span>
+    {:else}
+      {#each value.items as item, i (i)}
+        {#if i > 0}<span class="aib-sep">, </span>{/if}{@render fieldValue(item)}
+      {/each}
+    {/if}
+  {:else}
+    <span class="aib-empty">—</span>
+  {/if}
+{/snippet}
+
+{#if vm}
+  <div class="aib-infobox">
+    {#if model.errors.length > 0}
+      <div class="aib-warnings">
+        {#each model.errors as error, i (i)}
+          <div class="aib-warning">{error}</div>
+        {/each}
+      </div>
+    {/if}
+
+    <div class="aib-title">{vm.title}</div>
+
+    {#if vm.subtitle}
+      <div class="aib-subtitle">{@render md(vm.subtitle)}</div>
+    {/if}
+
+    {#if vm.image}
+      {@const src = ctx.resolveImage(vm.image)}
+      {#if src}
+        <div class="aib-image">
+          <img {src} alt={vm.caption ?? vm.title} />
+        </div>
+      {:else}
+        <div class="aib-image-missing">Image not found: {vm.image}</div>
+      {/if}
+    {/if}
+
+    {#if vm.caption}
+      <div class="aib-caption">{@render md(vm.caption)}</div>
+    {/if}
+
+    {#if vm.bare}
+      <div class="aib-bare">Add properties to this note to populate the infobox.</div>
+    {:else}
+      {#if vm.sections.length > 0}
+        <table class="aib-table">
+          <tbody>
+            {#each vm.sections as section, si (si)}
+              {#if section.label}
+                <tr class="aib-section-row">
+                  <th class="aib-section" colspan="2" scope="colgroup">{section.label}</th>
+                </tr>
+              {/if}
+              {#each section.fields as field (field.key)}
+                <tr>
+                  <th class="aib-label" scope="row">{field.label}</th>
+                  <td class="aib-value">{@render fieldValue(field.value)}</td>
+                </tr>
+              {/each}
+            {/each}
+          </tbody>
+        </table>
+      {/if}
+
+      {#if tagsMarkdown}
+        <div class="aib-tags">{@render md(tagsMarkdown)}</div>
+      {/if}
+    {/if}
+  </div>
+{/if}

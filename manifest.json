@@ -1,0 +1,10 @@
+{
+  "id": "advanced-infobox",
+  "name": "Advanced Infobox",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Wiki-style infoboxes rendered from your plain, flat frontmatter. Placement, sizing, and theming are customizable; your properties stay the single source of truth.",
+  "author": "Dwi Elfianto",
+  "authorUrl": "https://github.com/delfianto",
+  "isDesktopOnly": false
+}
