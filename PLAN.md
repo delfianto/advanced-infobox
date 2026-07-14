@@ -236,8 +236,9 @@ Rules and behavior:
 - Strings run through `MarkdownRenderer.render` → wikilinks, formatting, and embeds just work;
   links participate in the graph (Obsidian already tracks quoted `"[[links]]"` in properties via
   `frontmatterLinks`).
-- Type-aware formatting: arrays → comma list or chips (setting); booleans → ✓/✗; dates →
-  configurable format; numbers → locale-aware.
+- Type-aware formatting: arrays → bulleted list (default), comma list, or chips (setting);
+  single-item arrays render as a plain value; booleans → ✓/✗; dates → configurable format;
+  numbers → locale-aware.
 - Image resolution exactly like the official pattern: strip `![[…]]`, then
   `getFirstLinkpathDest` + `vault.getResourcePath`, or pass through `http(s)` URLs.
 

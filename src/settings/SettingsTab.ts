@@ -5,6 +5,7 @@ import {
   type ArrayStyle,
   type LivePreviewPresentation,
   type Placement,
+  type TextAlign,
 } from "src/settings/settings";
 import type AdvancedInfoboxPlugin from "src/main";
 
@@ -93,10 +94,26 @@ export class InfoboxSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Label alignment")
+      .setDesc("Alignment of the property-name column (wiki articles use left).")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("left", "Left")
+          .addOption("center", "Center")
+          .addOption("right", "Right")
+          .setValue(this.plugin.settings.labelAlign)
+          .onChange(async (value) => {
+            this.plugin.settings.labelAlign = value as TextAlign;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
       .setName("List display")
       .setDesc("How list properties (e.g. known_for) are rendered.")
       .addDropdown((dropdown) =>
         dropdown
+          .addOption("list", "Bulleted list")
           .addOption("comma", "Comma-separated")
           .addOption("chips", "Chips")
           .setValue(this.plugin.settings.arrayStyle)

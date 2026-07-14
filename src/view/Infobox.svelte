@@ -22,12 +22,21 @@
   {:else if value.kind === "boolean"}
     <span class="aib-bool" class:aib-bool-true={value.value}>{value.value ? "✓" : "✗"}</span>
   {:else if value.kind === "list"}
-    {#if model.arrayStyle === "chips"}
+    {#if value.items.length === 1}
+      <!-- A lone bullet reads as clutter; render the single item plain. -->
+      {@render fieldValue(value.items[0])}
+    {:else if model.arrayStyle === "chips"}
       <span class="aib-chips">
         {#each value.items as item, i (i)}
           <span class="aib-chip">{@render fieldValue(item)}</span>
         {/each}
       </span>
+    {:else if model.arrayStyle === "list"}
+      <ul class="aib-list">
+        {#each value.items as item, i (i)}
+          <li>{@render fieldValue(item)}</li>
+        {/each}
+      </ul>
     {:else}
       {#each value.items as item, i (i)}
         {#if i > 0}<span class="aib-sep">, </span>{/if}{@render fieldValue(item)}

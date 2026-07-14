@@ -58,6 +58,9 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     }
     const width = sanitizeCssLength(this.settings.width, DEFAULT_SETTINGS.width);
     const fontSize = sanitizeCssLength(this.settings.fontSize, DEFAULT_SETTINGS.fontSize);
-    this.styleEl.textContent = `body { --aib-width: ${width}; --aib-font-size: ${fontSize}; }`;
+    // labelAlign is a closed union from a dropdown; no sanitizing needed.
+    this.styleEl.textContent =
+      `body { --aib-width: ${width}; --aib-font-size: ${fontSize}; ` +
+      `--aib-label-align: ${this.settings.labelAlign}; }`;
   }
 }
