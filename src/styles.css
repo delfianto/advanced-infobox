@@ -1,0 +1,241 @@
+/* ============================================================
+   Advanced Infobox — wiki-style infobox from flat frontmatter
+
+   Every visual knob is a CSS custom property (--aib-*) that
+   defaults to an Obsidian theme variable, so the box follows
+   the active theme and stays overridable from three layers:
+   theme/snippet CSS, the Style Settings plugin, and the plugin
+   settings tab (which writes body-level variables).
+   ============================================================ */
+
+/* ── Container (the element the code block processor fills) ── */
+
+/* Reading view: a true float — body text wraps around the box. */
+.markdown-preview-view .aib-container.aib-right {
+  float: right;
+  clear: right;
+  width: min(var(--aib-width, 22em), 45%);
+  margin: 0 0 1em 1.5em;
+}
+
+.markdown-preview-view .aib-container.aib-left {
+  float: left;
+  clear: left;
+  width: min(var(--aib-width, 22em), 45%);
+  margin: 0 1.5em 1em 0;
+}
+
+.aib-container.aib-full {
+  width: 100%;
+  margin: 0 0 1em 0;
+}
+
+/* Live Preview: the widget is a CM6 block element — editor lines cannot
+   wrap around a float, so render a non-wrapping card instead. */
+.markdown-source-view .aib-container.aib-lp-aligned.aib-right {
+  width: min(var(--aib-width, 22em), 100%);
+  margin-inline-start: auto;
+}
+
+.markdown-source-view .aib-container.aib-lp-aligned.aib-left {
+  width: min(var(--aib-width, 22em), 100%);
+  margin-inline-end: auto;
+}
+
+/* aib-lp-full-width needs no rules: the container defaults to full width. */
+
+/* Narrow panes: floating a box leaves no room for prose next to it. */
+@media (max-width: 600px) {
+  .markdown-preview-view .aib-container.aib-right,
+  .markdown-preview-view .aib-container.aib-left {
+    float: none;
+    clear: both;
+    width: 100%;
+    margin: 0 0 1em 0;
+  }
+}
+
+/* ── Card ──────────────────────────────────────────────────── */
+
+.aib-infobox {
+  width: 100%;
+  font-size: var(--aib-font-size, 0.9em);
+  line-height: 1.5;
+  color: var(--aib-text-color, var(--text-normal));
+  background: var(--aib-bg, var(--background-secondary));
+  border: var(--aib-border-width, 1px) solid
+    var(--aib-border-color, var(--background-modifier-border));
+  border-radius: var(--aib-radius, var(--radius-m, 8px));
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+
+.aib-title {
+  text-align: center;
+  font-size: var(--aib-title-size, 1.15em);
+  font-weight: var(--aib-title-weight, 700);
+  padding: 0.6em 0.8em 0.45em;
+  line-height: 1.3;
+}
+
+.aib-subtitle {
+  text-align: center;
+  font-style: italic;
+  font-size: 0.95em;
+  color: var(--aib-muted-color, var(--text-muted));
+  padding: 0 0.8em 0.5em;
+}
+
+/* ── Image ─────────────────────────────────────────────────── */
+
+.aib-image {
+  text-align: center;
+  padding: 0.5em 0.6em;
+  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+}
+
+.aib-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--aib-image-radius, 4px);
+}
+
+.aib-image-missing {
+  text-align: center;
+  padding: 0.5em 0.8em;
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--text-faint);
+  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+}
+
+.aib-caption {
+  text-align: center;
+  font-size: 0.85em;
+  font-style: italic;
+  color: var(--aib-muted-color, var(--text-muted));
+  padding: 0 0.8em 0.5em;
+}
+
+/* ── Fields ────────────────────────────────────────────────── */
+
+.aib-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  margin: 0;
+  font-size: inherit;
+}
+
+.aib-table tr {
+  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+}
+
+/* Wiki-style section header row spanning both columns. */
+.aib-section {
+  text-align: center;
+  padding: 0.4em 0.7em;
+  font-size: var(--aib-section-size, 0.8em);
+  font-weight: var(--aib-section-weight, 600);
+  letter-spacing: 0.06em;
+  text-transform: var(--aib-section-transform, uppercase);
+  color: var(--aib-section-color, var(--text-muted));
+  background: var(--aib-section-bg, var(--background-modifier-hover));
+}
+
+.aib-label {
+  width: var(--aib-label-width, 38%);
+  text-align: left;
+  vertical-align: top;
+  font-weight: var(--aib-label-weight, 600);
+  font-size: 0.92em;
+  color: var(--aib-label-color, var(--text-muted));
+  padding: 0.35em 0.4em 0.35em 0.7em;
+  overflow-wrap: anywhere;
+}
+
+.aib-value {
+  vertical-align: top;
+  padding: 0.35em 0.7em 0.35em 0.4em;
+  overflow-wrap: anywhere;
+}
+
+/* Markdown-rendered values arrive wrapped in <p>; flatten them inline. */
+.aib-md {
+  display: inline;
+}
+
+.aib-md > p {
+  display: inline;
+  margin: 0;
+}
+
+.aib-md > ul,
+.aib-md > ol {
+  margin: 0.2em 0;
+  padding-inline-start: 1.2em;
+}
+
+.aib-empty {
+  color: var(--text-faint);
+}
+
+.aib-bool {
+  color: var(--color-red, #e03c3c);
+  font-weight: 600;
+}
+
+.aib-bool.aib-bool-true {
+  color: var(--color-green, #2f9e44);
+}
+
+.aib-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+}
+
+.aib-chip {
+  display: inline-block;
+  padding: 0.05em 0.55em;
+  border-radius: 999px;
+  background: var(--aib-chip-bg, var(--background-modifier-hover));
+  font-size: 0.92em;
+}
+
+/* ── Tags ──────────────────────────────────────────────────── */
+
+.aib-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  padding: 0.5em 0.7em;
+  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+  font-size: 0.9em;
+}
+
+/* ── States ────────────────────────────────────────────────── */
+
+.aib-bare {
+  padding: 0.6em 0.8em;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--text-faint);
+  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+}
+
+.aib-warnings {
+  padding: 0.45em 0.7em;
+  background: rgba(var(--color-orange-rgb, 236, 117, 0), 0.08);
+  border-bottom: 1px solid var(--aib-divider-color, var(--background-modifier-border));
+}
+
+.aib-warning {
+  font-size: 0.85em;
+  color: var(--color-orange, #ec7500);
+}
