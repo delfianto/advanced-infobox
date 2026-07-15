@@ -3,12 +3,18 @@ export type LivePreviewPresentation = "full-width" | "aligned";
 export type ArrayStyle = "list" | "comma" | "chips";
 export type TextAlign = "left" | "center" | "right";
 export type BooleanStyle = "check" | "yes-no";
+export type LpCollapse = "off" | "expanded" | "collapsed";
 export type Density = "compact" | "normal" | "comfortable";
 export type VisualPreset = "native" | "wikipedia";
 
 export interface InfoboxSettings {
   placement: Placement;
   livePreview: LivePreviewPresentation;
+  /**
+   * Collapsible card in Live Preview: off, or collapsible starting
+   * expanded/collapsed. Reading view always renders expanded.
+   */
+  lpCollapse: LpCollapse;
   /** CSS length, e.g. "22em" */
   width: string;
   /** CSS length, e.g. "0.9em" */
@@ -35,6 +41,7 @@ export interface InfoboxSettings {
 export const DEFAULT_SETTINGS: InfoboxSettings = {
   placement: "right",
   livePreview: "full-width",
+  lpCollapse: "off",
   width: "22em",
   fontSize: "0.9em",
   excludeKeys: ["tags", "aliases", "cssclasses", "infobox", "position"],

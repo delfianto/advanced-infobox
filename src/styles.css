@@ -243,6 +243,45 @@ settings:
 
 /* ── Header ────────────────────────────────────────────────── */
 
+/* Collapse toggle (Live Preview only). The button wraps the normal title
+   so typography stays identical; Obsidian's button styling is reset. */
+.aib-infobox .aib-title-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+}
+
+.aib-infobox .aib-title-btn:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--background-modifier-border-focus, #7aa2f7);
+}
+
+.aib-chevron {
+  display: inline-block;
+  font-size: 0.75em;
+  color: var(--aib-muted-color, var(--text-muted));
+  transition: transform 120ms ease;
+}
+
+.aib-collapsed .aib-chevron {
+  transform: rotate(-90deg);
+}
+
+/* Collapse only acts in Live Preview; Reading view (and exports, which have
+   no editor DOM) always render expanded, and the affordance disappears. */
+.markdown-source-view .aib-collapsed .aib-body {
+  display: none;
+}
+
+.markdown-preview-view .aib-chevron {
+  display: none;
+}
+
+.markdown-preview-view .aib-title-btn {
+  cursor: default;
+}
+
 .aib-title {
   text-align: center;
   font-size: var(--aib-title-size, 1.15em);

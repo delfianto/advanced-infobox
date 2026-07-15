@@ -8,6 +8,11 @@
   const tagsMarkdown = $derived(
     vm && vm.tags.length > 0 ? vm.tags.map((t) => `#${t}`).join(" ") : "",
   );
+
+  function toggleCollapse(): void {
+    model.collapsed = !model.collapsed;
+    ctx.persistCollapse(model.collapsed);
+  }
 </script>
 
 {#snippet md(text: string)}
@@ -54,7 +59,7 @@
 {/snippet}
 
 {#if vm}
-  <div class="aib-infobox">
+  <div class="aib-infobox" class:aib-collapsed={model.collapsible && model.collapsed}>
     {#if model.errors.length > 0}
       <div class="aib-warnings">
         {#each model.errors as error, i (i)}
@@ -63,8 +68,23 @@
       </div>
     {/if}
 
-    <div class="aib-title">{vm.title}</div>
+    {#if model.collapsible}
+      <button
+        type="button"
+        class="aib-title-btn"
+        aria-expanded={!model.collapsed}
+        onclick={toggleCollapse}
+      >
+        <div class="aib-title">
+          <span class="aib-chevron" aria-hidden="true">▾</span>
+          {vm.title}
+        </div>
+      </button>
+    {:else}
+      <div class="aib-title">{vm.title}</div>
+    {/if}
 
+    <div class="aib-body">
     {#if vm.subtitle}
       <div class="aib-subtitle">{@render md(vm.subtitle)}</div>
     {/if}
@@ -111,5 +131,6 @@
         <div class="aib-tags">{@render md(tagsMarkdown)}</div>
       {/if}
     {/if}
+    </div>
   </div>
 {/if}
