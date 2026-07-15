@@ -647,3 +647,18 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
     padding-block: 0.4em;
   }
 }
+
+/* ── Settings tab ──────────────────────────────────────────── */
+
+/* Give the interactive controls a consistent width so the column of dropdowns,
+   inputs, and sliders reads as one tidy, aligned group. */
+.aib-settings .setting-item-control input[type="text"],
+.aib-settings .setting-item-control input[type="range"] {
+  width: 14em;
+  max-width: 100%;
+}
+
+.aib-settings .setting-item-control select {
+  min-width: 14em;
+  max-width: 100%;
+}
