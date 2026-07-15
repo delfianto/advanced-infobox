@@ -93,7 +93,7 @@ export function sanitizeCssLength(value: string, fallback: string): string {
 
 export function parseKeyList(raw: string): string[] {
   return raw
-    .split(",")
+    .split(/[\n,]/u)
     .map((k) => k.trim())
     .filter(Boolean);
 }
