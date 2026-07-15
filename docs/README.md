@@ -17,6 +17,7 @@ BRAT install instructions, see the [main README](../README.md).
 - **[Block options](block-options.md)** — the `` ```infobox `` block's per-note, presentation-only options.
 - **[Settings](settings.md)** — every control in the plugin's settings tab, with defaults.
 - **[Theming](theming.md)** — the `--aib-*` CSS-variable API, the Style Settings integration, and the visual presets.
+- **[Bases](bases.md)** — generate an Obsidian Base from a folder of notes, and preview a note's infobox on hover inside a Base.
 
 ## Worked example
 
