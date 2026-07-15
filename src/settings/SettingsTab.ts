@@ -16,6 +16,17 @@ import {
 import type AdvancedInfoboxPlugin from "src/main";
 import { FolderSuggest } from "src/settings/folder-suggest";
 
+/** Leading numeric value of a CSS length string, or NaN (e.g. "22em" → 22). */
+function leadingNumber(length: string): number {
+  return Number(/^\d*\.?\d+/u.exec(length.trim())?.[0] ?? "");
+}
+
+/** The numeric em value of a CSS length string, falling back when unparseable. */
+function emValue(length: string, fallback: string): number {
+  const parsed = leadingNumber(length);
+  return parsed > 0 ? parsed : leadingNumber(fallback);
+}
+
 export class InfoboxSettingTab extends PluginSettingTab {
   constructor(
     app: App,
@@ -27,6 +38,7 @@ export class InfoboxSettingTab extends PluginSettingTab {
   override display(): void {
     const { containerEl } = this;
     containerEl.empty();
+    containerEl.addClass("aib-settings");
 
     // ── Layout ─────────────────────────────────────────────────
 
@@ -70,9 +82,9 @@ export class InfoboxSettingTab extends PluginSettingTab {
       )
       .addDropdown((dropdown) =>
         dropdown
-          .addOption("off", "Off")
-          .addOption("expanded", "Collapsible, start expanded")
-          .addOption("collapsed", "Collapsible, start collapsed")
+          .addOption("off", "Disabled")
+          .addOption("collapsed", "Start collapsed")
+          .addOption("expanded", "Start expanded")
           .setValue(this.plugin.settings.lpCollapse)
           .onChange(async (value) => {
             this.plugin.settings.lpCollapse = value as LpCollapse;
@@ -92,26 +104,28 @@ export class InfoboxSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Width")
-      .setDesc("CSS length for the infobox width (e.g. 22em, 320px). Capped on narrow panes.")
-      .addText((text) =>
-        text
-          .setPlaceholder(DEFAULT_SETTINGS.width)
-          .setValue(this.plugin.settings.width)
+      .setDesc("Infobox width, in em. Capped on narrow panes.")
+      .addSlider((slider) =>
+        slider
+          .setLimits(14, 40, 1)
+          .setValue(emValue(this.plugin.settings.width, DEFAULT_SETTINGS.width))
+          .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.width = value.trim() || DEFAULT_SETTINGS.width;
+            this.plugin.settings.width = `${value}em`;
             await this.plugin.saveSettings();
           }),
       );
 
     new Setting(containerEl)
       .setName("Font size")
-      .setDesc("CSS length for the infobox text (e.g. 0.9em, 13px).")
-      .addText((text) =>
-        text
-          .setPlaceholder(DEFAULT_SETTINGS.fontSize)
-          .setValue(this.plugin.settings.fontSize)
+      .setDesc("Infobox text size relative to the note, in em.")
+      .addSlider((slider) =>
+        slider
+          .setLimits(0.7, 1.4, 0.05)
+          .setValue(emValue(this.plugin.settings.fontSize, DEFAULT_SETTINGS.fontSize))
+          .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.fontSize = value.trim() || DEFAULT_SETTINGS.fontSize;
+            this.plugin.settings.fontSize = `${Number(value.toFixed(2))}em`;
             await this.plugin.saveSettings();
           }),
       );
