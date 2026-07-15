@@ -71,13 +71,19 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     [...settings.excludeKeys, ...(blockConfig.exclude ?? [])].map((k) => k.toLowerCase()),
   );
 
+  const labelOverrides = new Map(
+    Object.entries(settings.labelMap).map(([k, v]) => [k.toLowerCase(), v]),
+  );
+  const labelFor = (key: string): string =>
+    labelOverrides.get(key.toLowerCase()) ?? prettifyKey(key);
+
   // Insertion order mirrors the file; sections consume from this pool.
   const pool = new Map<string, InfoboxField>();
   for (const key of Object.keys(frontmatter)) {
     if (specialKeys.has(key) || excluded.has(key.toLowerCase())) continue;
     const value = classifyValue(frontmatter[key]);
     if (value.kind === "empty") continue;
-    pool.set(key, { key, label: prettifyKey(key), value });
+    pool.set(key, { key, label: labelFor(key), value });
   }
 
   const takeField = (wanted: string): InfoboxField | undefined => {

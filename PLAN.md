@@ -378,12 +378,16 @@ config); wiki-style section header rows via per-note block config (`sections`, `
 the same grouping mechanism templates will drive vault-wide in Phase 3. Unit tests for
 `schema.ts` and `block-config.ts`.
 
-**Phase 2 — Customization depth**
-Full settings tab (font size, density, visual preset, Live Preview presentation
-(full-width/aligned), date/array/boolean formatting, key→label map, special-key remapping);
-per-note block overrides (`placement`, `exclude`, `image`,
-`caption`); Style Settings `@settings` manifest; container-query responsive collapse; command
-"Insert infobox" + editor suggestion for the block.
+**Phase 2 — Customization depth** *(shipped)*
+Full settings tab (font size, density compact/normal/comfortable, visual preset
+Obsidian-native/Wikipedia-classic with dark-mode variant, Live Preview presentation,
+date/array/boolean formatting, key→label map, special-key remapping); per-note block
+overrides; Style Settings `@settings` manifest (~25 variables under Layout / Typography /
+Colors / Lists headings); pane-width responsive collapse via ResizeObserver — container
+queries were rejected because they would require stamping `container-type` onto Obsidian's
+own preview containers, too invasive; "Insert infobox" command (block-option editor
+suggestion deferred to Phase 4 polish). The plugin settings stylesheet emits only
+non-default values, so untouched settings remain fully drivable from Style Settings.
 
 **Phase 3 — Markdown templates**
 Template registry (scan configured folder, resolve `infobox:` property → template note, watch
@@ -407,9 +411,10 @@ processFrontMatter`) for inline editing; docs with screenshots; community plugin
   child must be cheap to construct (memoize view-model, avoid layout thrash).
 - **Frontmatter wikilinks** must be quoted (`"[[x]]"`) to be valid YAML — Obsidian handles this,
   but docs should call it out since unquoted links are a common user error.
-- **Container query support** assumed from Obsidian's Electron/Chromium; verify on the oldest
-  supported installer version and on mobile WebView; fall back to a ResizeObserver class toggle
-  if needed.
+- ~~**Container query support**~~ *Resolved:* responsive collapse uses a ResizeObserver on the
+  enclosing pane (`aib-narrow` class below 500px pane width) — correct in split layouts where
+  window media queries are wrong, and avoids stamping `container-type` onto Obsidian's own
+  containers.
 - **Template notes**: moving/renaming the template folder must re-point the setting or degrade
   gracefully; a deleted referenced template falls back to zero-config + notice; the global
   property-type registry (`types.json`) can flag template label values as type mismatches on

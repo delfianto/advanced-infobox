@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, TFile } from "obsidian";
+import { MarkdownRenderChild, TFile, moment } from "obsidian";
 import { mount, unmount } from "svelte";
 import { parseBlockConfig, type BlockConfig } from "src/model/block-config";
 import { buildViewModel } from "src/model/schema";
@@ -20,6 +20,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
   private blockConfig: BlockConfig = {};
   private readonly model = new InfoboxModel();
   private component: Record<string, unknown> | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(
     containerEl: HTMLElement,
@@ -51,13 +52,18 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
         ctx: {
           renderMarkdown: createMarkdownRenderer(this.plugin.app, this.sourcePath, this),
           resolveImage: (raw: string) => this.resolveImage(raw),
+          formatDate: (iso: string) => this.formatDate(iso),
         },
       },
     });
+
+    this.observePaneWidth();
   }
 
   onunload(): void {
     this.plugin.detach(this);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     if (this.component) {
       void unmount(this.component);
       this.component = null;
@@ -81,7 +87,34 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
       blockConfig: this.blockConfig,
     });
     this.model.arrayStyle = this.plugin.settings.arrayStyle;
+    this.model.booleanStyle = this.plugin.settings.booleanStyle;
     this.applyContainerClasses();
+  }
+
+  private formatDate(iso: string): string {
+    const format = this.plugin.settings.dateFormat.trim();
+    if (format === "") return iso;
+    // moment.utc: keeps date-only values from shifting a day in western
+    // timezones, and (unlike the bare call) is callable per obsidian.d.ts.
+    const parsed = moment.utc(iso, moment.ISO_8601, true);
+    return parsed.isValid() ? parsed.format(format) : iso;
+  }
+
+  /**
+   * Media queries see the window, not the pane — wrong for split layouts.
+   * Watch the enclosing pane instead and collapse the float when prose
+   * would have no room next to it.
+   */
+  private observePaneWidth(): void {
+    const pane = this.containerEl.closest(
+      ".markdown-reading-view, .markdown-preview-view, .markdown-source-view",
+    );
+    if (!(pane instanceof HTMLElement) || typeof ResizeObserver === "undefined") return;
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const width = entries[entries.length - 1]?.contentRect.width ?? 0;
+      this.containerEl.classList.toggle("aib-narrow", width > 0 && width < 500);
+    });
+    this.resizeObserver.observe(pane);
   }
 
   /**
@@ -91,12 +124,24 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
    */
   private applyContainerClasses(): void {
     const el = this.containerEl;
-    el.removeClasses(["aib-right", "aib-left", "aib-full", "aib-lp-full-width", "aib-lp-aligned"]);
+    const settings = this.plugin.settings;
+    el.removeClasses([
+      "aib-right",
+      "aib-left",
+      "aib-full",
+      "aib-lp-full-width",
+      "aib-lp-aligned",
+      "aib-density-compact",
+      "aib-density-comfortable",
+      "aib-preset-wikipedia",
+    ]);
     el.addClasses([
       "aib-container",
-      `aib-${this.blockConfig.placement ?? this.plugin.settings.placement}`,
-      `aib-lp-${this.plugin.settings.livePreview}`,
+      `aib-${this.blockConfig.placement ?? settings.placement}`,
+      `aib-lp-${settings.livePreview}`,
     ]);
+    if (settings.density !== "normal") el.addClass(`aib-density-${settings.density}`);
+    if (settings.visualPreset === "wikipedia") el.addClass("aib-preset-wikipedia");
   }
 
   private resolveImage(raw: string): string | null {
