@@ -485,7 +485,8 @@ settings:
   box-shadow: 0 0 0 2px var(--background-modifier-border-focus, #7aa2f7);
 }
 
-.aib-edit-number {
+/* All text-like editors (number, text, date) share one look. */
+input.aib-edit {
   width: 100%;
   box-sizing: border-box;
   padding: 0 0.2em;
@@ -497,11 +498,11 @@ settings:
   text-align: inherit;
 }
 
-.aib-edit-number:hover {
+input.aib-edit:hover {
   border-color: var(--aib-divider-color, var(--background-modifier-border));
 }
 
-.aib-edit-number:focus {
+input.aib-edit:focus {
   outline: none;
   border-color: var(--background-modifier-border-focus, #7aa2f7);
   background: var(--background-primary);

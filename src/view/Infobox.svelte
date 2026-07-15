@@ -28,7 +28,16 @@
     ctx.endEdit();
   }
 
-  function onNumberKeydown(event: KeyboardEvent, original: number): void {
+  // Text and date fields both commit their raw input string; an empty value
+  // reverts rather than clearing the property (clear from the Properties panel).
+  function commitString(input: HTMLInputElement, key: string, original: string): void {
+    const next = input.value.trim();
+    if (next === "") input.value = original;
+    else if (next !== original) ctx.commitField(key, next);
+    ctx.endEdit();
+  }
+
+  function onEditKeydown(event: KeyboardEvent, revertTo: string): void {
     // Keep Live Preview's CM6 editor from treating these as document keystrokes.
     event.stopPropagation();
     const input = event.currentTarget as HTMLInputElement;
@@ -37,7 +46,7 @@
       input.blur();
     } else if (event.key === "Escape") {
       event.preventDefault();
-      input.value = String(original);
+      input.value = revertTo;
       input.blur();
     }
   }
@@ -109,7 +118,29 @@
       aria-label={field.label}
       onfocus={() => ctx.beginEdit()}
       onblur={(event) => commitNumber(event.currentTarget, field.key, current)}
-      onkeydown={(event) => onNumberKeydown(event, current)}
+      onkeydown={(event) => onEditKeydown(event, String(current))}
+    />
+  {:else if value.kind === "markdown"}
+    {@const text = value.markdown}
+    <input
+      type="text"
+      class="aib-edit aib-edit-text"
+      value={text}
+      aria-label={field.label}
+      onfocus={() => ctx.beginEdit()}
+      onblur={(event) => commitString(event.currentTarget, field.key, text)}
+      onkeydown={(event) => onEditKeydown(event, text)}
+    />
+  {:else if value.kind === "date"}
+    {@const iso = value.iso}
+    <input
+      type="date"
+      class="aib-edit aib-edit-date"
+      value={iso}
+      aria-label={field.label}
+      onfocus={() => ctx.beginEdit()}
+      onblur={(event) => commitString(event.currentTarget, field.key, iso)}
+      onkeydown={(event) => onEditKeydown(event, iso)}
     />
   {/if}
 {/snippet}

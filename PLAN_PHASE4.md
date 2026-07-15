@@ -91,43 +91,52 @@ registry (`templates.ids()`), and frontmatter keys of the current note for
 `exclude`/`sections` lists. Trigger detection: `editor.getLine` scan upward
 for the opening fence. Moderate effort, big ergonomics win.
 
-## 3. Property write-back (inline editing in the box) — *v1 (boolean + number) shipped 2026-07-15, verified in Obsidian 1.12.7*
+## 3. Property write-back (inline editing in the box) — *boolean/number + string/date shipped 2026-07-15 (verified in Obsidian 1.12.7); lists pending*
 
 Clicking a value in the infobox edits it; commit via
 `fileManager.processFrontMatter` (never touches the body). Behind the global
-**Edit properties in infobox** toggle (default off).
+**Edit properties in infobox** toggle (default off). Verified end to end by
+driving real Obsidian (CDP) in both Reading view and Live Preview: every editor
+writes frontmatter and the box updates in place; strings and dates round-trip,
+Escape reverts, and the box floats/renders exactly as read-only.
 
-**v1 shipped** — scalar booleans and numbers only (the safe, high-value slice:
-TTRPG stat bumps, flags). Verified end to end by driving real Obsidian (CDP) in
-both Reading view and Live Preview: boolean toggle and number commit both write
-frontmatter and the box updates in place; strings/dates/lists stay read-only.
+Shipped — every scalar plus date-only values:
+- **boolean** → a clickable button reusing the ✓/✗ display (commits on click).
+- **number** → `<input type=number>`; commits on blur/Enter, reverts on Escape
+  or invalid input (`parseNumberInput` rejects empty/NaN/Infinity).
+- **string** (`markdown` kind) → `<input type=text>`, commits the raw value.
+- **date-only** (`YYYY-MM-DD`) → `<input type=date>`. Shows the OS date-picker
+  format while editing is on, not `settings.dateFormat`. Datetime values (a time
+  component) stay read-only for now.
 
-- `src/model/edit.ts` — pure gates `isEditableValue` (boolean|number) and
-  `parseNumberInput` (rejects empty/NaN/Infinity), unit-tested.
-- Editors live at the field-row level in `Infobox.svelte` (a boolean button
-  reusing the ✓/✗ display; an `<input type=number>`), never inside the
+Architecture:
+- `src/model/edit.ts` — pure gates `isEditableValue` (boolean | number |
+  markdown | date-only), `isDateOnly`, `parseNumberInput`, unit-tested.
+- Editors live at the field-row level in `Infobox.svelte`, never inside the
   recursive `fieldValue` snippet, so nested list items are never editable.
-  Gated on `model.editEnabled` + `isEditableValue`.
-- Commit: `InfoboxRenderChild.commitField` → `processFrontMatter`. Numbers
-  commit on blur/Enter, revert on Escape or invalid input.
+  Gated on `model.editEnabled` + `isEditableValue`. Text and date share one
+  `commitString` (empty reverts rather than clearing the property) and one
+  `onEditKeydown` (Enter commits, Escape reverts, `stopPropagation` keeps CM6
+  out).
+- Commit: `InfoboxRenderChild.commitField` → `processFrontMatter`.
 - **Echo-loop latch** (the crux): the child's own `metadataCache."changed"`
   listener re-enters `refresh()`, which reassigns `model.vm` and would tear down
   a live `<input>` mid-edit. `beginEdit`/`endEdit` (an `editDepth` counter)
   defer refresh while a field editor is focused, reconciling once it settles.
   Verified: an external write during a focused edit leaves the input in place,
   focused, value intact, then both writes reconcile.
-- Live Preview focus: the number `<input>` receives focus and keystrokes inside
-  the CM6 code-block widget (keydown `stopPropagation` keeps CM6 from treating
-  them as document input); no `contenteditable` needed.
+- Live Preview focus: inputs receive focus and keystrokes inside the CM6
+  code-block widget; no `contenteditable` needed.
 
-Remaining tiers (deferred, each its own increment):
-- **Strings/dates**: text input (careful with YAML quoting and date-string
-  collisions) and a date picker round-tripping `settings.dateFormat`.
-- **Lists**: add/remove/edit — the hard one (array semantics; single-item lists
-  render plain and empties are filtered, both lossy).
+Remaining:
+- **Lists** (§#10): add/remove/edit — the hard one (array semantics;
+  single-item lists render plain and empties are filtered, both lossy).
 - Only fields backed directly by `frontmatter[key]` are editable; header fields
   sourced via block-option overrides (`image`/`caption`) and the merged `tags`
-  are intentionally not click-to-edit.
+  are intentionally not click-to-edit. Nested-object values (rendered as inline
+  code) are string-editable but lossy — a known edge, discouraged anyway.
+- Clearing a field to empty reverts rather than deleting the property; remove it
+  from the Properties panel instead.
 
 ## 4. Docs (README is still the 3-line stub)
 
