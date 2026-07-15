@@ -8,9 +8,9 @@ export function createMarkdownRenderer(
   app: App,
   sourcePath: string,
   owner: Component,
-): (markdown: string, el: HTMLElement) => void {
-  return (markdown, el) => {
+): (markdown: string, el: HTMLElement) => Promise<void> {
+  return async (markdown, el) => {
     while (el.firstChild) el.firstChild.remove();
-    void MarkdownRenderer.render(app, markdown, el, sourcePath, owner);
+    await MarkdownRenderer.render(app, markdown, el, sourcePath, owner);
   };
 }
