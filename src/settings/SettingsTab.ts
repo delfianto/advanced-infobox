@@ -1,20 +1,20 @@
-import { PluginSettingTab, Setting, type App } from "obsidian";
+import { type App, PluginSettingTab, Setting } from "obsidian";
 import {
-  DEFAULT_SETTINGS,
-  parseKeyList,
-  parseLabelMap,
-  serializeLabelMap,
   type ArrayStyle,
   type BooleanStyle,
+  DEFAULT_SETTINGS,
   type Density,
   type LivePreviewPresentation,
   type LpCollapse,
+  parseKeyList,
+  parseLabelMap,
   type Placement,
+  serializeLabelMap,
   type TextAlign,
   type VisualPreset,
 } from "src/settings/settings";
-import { FolderSuggest } from "src/settings/folder-suggest";
 import type AdvancedInfoboxPlugin from "src/main";
+import { FolderSuggest } from "src/settings/folder-suggest";
 
 export class InfoboxSettingTab extends PluginSettingTab {
   constructor(
@@ -24,7 +24,7 @@ export class InfoboxSettingTab extends PluginSettingTab {
     super(app, plugin);
   }
 
-  display(): void {
+  override display(): void {
     const { containerEl } = this;
     containerEl.empty();
 

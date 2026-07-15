@@ -1,11 +1,11 @@
-import { MarkdownRenderChild, TFile, moment } from "obsidian";
+import { type BlockConfig, parseBlockConfig } from "src/model/block-config";
+import { MarkdownRenderChild, moment, TFile } from "obsidian";
 import { mount, unmount } from "svelte";
-import { parseBlockConfig, type BlockConfig } from "src/model/block-config";
+import type AdvancedInfoboxPlugin from "src/main";
 import { buildViewModel } from "src/model/schema";
+import { createMarkdownRenderer } from "src/view/markdown";
 import Infobox from "src/view/Infobox.svelte";
 import { InfoboxModel } from "src/view/infobox-state.svelte";
-import { createMarkdownRenderer } from "src/view/markdown";
-import type AdvancedInfoboxPlugin from "src/main";
 
 /**
  * One rendered infobox widget. Created by the code block processor for both
@@ -34,7 +34,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     super(containerEl);
   }
 
-  onload(): void {
+  override onload(): void {
     this.plugin.attach(this);
 
     const { config, errors } = parseBlockConfig(this.source);
@@ -67,7 +67,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     this.observePaneWidth();
   }
 
-  onunload(): void {
+  override onunload(): void {
     this.plugin.detach(this);
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
@@ -84,7 +84,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
   private async refreshAsync(): Promise<void> {
     const seq = ++this.refreshSeq;
-    const settings = this.plugin.settings;
+    const { settings } = this.plugin;
 
     const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
     const frontmatter =
@@ -110,7 +110,8 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
         );
       }
     }
-    if (seq !== this.refreshSeq) return; // superseded by a newer refresh
+    // Superseded by a newer refresh: drop this result.
+    if (seq !== this.refreshSeq) return;
 
     this.model.vm = buildViewModel({
       frontmatter,
@@ -146,7 +147,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     );
     if (!(pane instanceof HTMLElement) || typeof ResizeObserver === "undefined") return;
     this.resizeObserver = new ResizeObserver((entries) => {
-      const width = entries[entries.length - 1]?.contentRect.width ?? 0;
+      const width = entries.at(-1)?.contentRect.width ?? 0;
       this.containerEl.classList.toggle("aib-narrow", width > 0 && width < 500);
     });
     this.resizeObserver.observe(pane);
@@ -159,7 +160,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
    */
   private applyContainerClasses(): void {
     const el = this.containerEl;
-    const settings = this.plugin.settings;
+    const { settings } = this.plugin;
     el.removeClasses([
       "aib-right",
       "aib-left",
@@ -181,8 +182,8 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
   private resolveImage(raw: string): string | null {
     let src = raw.trim();
-    src = src.replace(/^!?\[\[(.+?)(\|[^\]]*)?\]\]$/, "$1").trim();
-    if (/^https?:\/\//i.test(src)) return src;
+    src = src.replace(/^!?\[\[(?<target>.+?)(?:\|[^\]]*)?\]\]$/u, "$<target>").trim();
+    if (/^https?:\/\//iu.test(src)) return src;
     const file = this.plugin.app.metadataCache.getFirstLinkpathDest(src, this.sourcePath);
     return file ? this.plugin.app.vault.getResourcePath(file) : null;
   }

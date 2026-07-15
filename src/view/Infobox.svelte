@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { FieldValue } from "src/model/values";
-  import type { InfoboxModel, RenderContext } from "src/view/infobox-state.svelte";
+  import { type InfoboxModel, type RenderContext } from "src/view/infobox-state.svelte";
+  import { type FieldValue } from "src/model/values";
 
-  let { model, ctx }: { model: InfoboxModel; ctx: RenderContext } = $props();
+  const { model, ctx }: { model: InfoboxModel; ctx: RenderContext } = $props();
 
   const vm = $derived(model.vm);
   const tagsMarkdown = $derived(

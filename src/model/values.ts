@@ -13,7 +13,7 @@ export type FieldValue =
   | { kind: "empty" };
 
 /** Obsidian date/datetime property values arrive as ISO-shaped strings. */
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?$/u;
 
 export function classifyValue(raw: unknown): FieldValue {
   if (raw === null || raw === undefined) return { kind: "empty" };
@@ -28,7 +28,7 @@ export function classifyValue(raw: unknown): FieldValue {
   if (typeof raw === "boolean") return { kind: "boolean", value: raw };
 
   if (Array.isArray(raw)) {
-    const items = raw.map(classifyValue).filter((v) => v.kind !== "empty");
+    const items = raw.map((item) => classifyValue(item)).filter((v) => v.kind !== "empty");
     return items.length === 0 ? { kind: "empty" } : { kind: "list", items };
   }
 
@@ -38,14 +38,14 @@ export function classifyValue(raw: unknown): FieldValue {
 
   // Nested objects are exactly what this plugin exists to avoid; render them
   // as inline code rather than pretending to understand their structure.
-  return { kind: "markdown", markdown: "`" + JSON.stringify(raw) + "`" };
+  return { kind: "markdown", markdown: `\`${JSON.stringify(raw)}\`` };
 }
 
 /** `eye_color` / `eye-color` / `eyeColor` → "Eye Color" */
 export function prettifyKey(key: string): string {
   const words = key
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .split(/[_\-\s]+/)
+    .replaceAll(/(?<tail>[a-z0-9])(?<head>[A-Z])/gu, "$<tail> $<head>")
+    .split(/[_\-\s]+/u)
     .filter(Boolean);
   if (words.length === 0) return key;
   return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -59,12 +59,12 @@ export function normalizeTags(raw: unknown): string[] {
   const add = (value: unknown): void => {
     if (value === null || value === undefined) return;
     if (Array.isArray(value)) {
-      value.forEach(add);
+      for (const item of value) add(item);
       return;
     }
     const parts = String(value)
-      .split(/[\s,]+/)
-      .map((t) => t.trim().replace(/^#+/, ""))
+      .split(/[\s,]+/u)
+      .map((t) => t.trim().replace(/^#+/u, ""))
       .filter(Boolean);
     for (const tag of parts) {
       const key = tag.toLowerCase();

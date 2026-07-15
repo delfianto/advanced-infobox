@@ -1,5 +1,5 @@
+import { type Placement, PLACEMENTS } from "src/settings/settings";
 import { parseYaml } from "obsidian";
-import { PLACEMENTS, type Placement } from "src/settings/settings";
 
 /**
  * Per-note, presentation-only overrides carried in the body of the
@@ -114,14 +114,16 @@ export function parseBlockConfig(source: string): BlockConfigResult {
   let raw: unknown;
   try {
     raw = parseYaml(source);
-  } catch (err) {
-    errors.push(`Could not parse infobox options: ${err instanceof Error ? err.message : err}`);
+  } catch (error) {
+    errors.push(
+      `Could not parse infobox options: ${error instanceof Error ? error.message : error}`,
+    );
     return { config, errors };
   }
 
   if (raw === null || raw === undefined) return { config, errors };
   if (typeof raw !== "object" || Array.isArray(raw)) {
-    errors.push("Infobox options must be `key: value` lines (got " + typeof raw + ").");
+    errors.push(`Infobox options must be \`key: value\` lines (got ${typeof raw}).`);
     return { config, errors };
   }
 
@@ -133,7 +135,7 @@ export function parseBlockConfig(source: string): BlockConfigResult {
     }
   }
 
-  const placement = entries["placement"];
+  const { placement } = entries;
   if (placement !== undefined) {
     if (typeof placement === "string" && (PLACEMENTS as readonly string[]).includes(placement)) {
       config.placement = placement as Placement;
@@ -142,7 +144,7 @@ export function parseBlockConfig(source: string): BlockConfigResult {
     }
   }
 
-  const exclude = entries["exclude"];
+  const { exclude } = entries;
   if (exclude !== undefined) {
     const list = asStringList(exclude);
     if (list) {
@@ -154,13 +156,13 @@ export function parseBlockConfig(source: string): BlockConfigResult {
     }
   }
 
-  const sections = entries["sections"];
+  const { sections } = entries;
   if (sections !== undefined) {
     const specs = asSections(sections, errors);
     if (specs && specs.length > 0) config.sections = specs;
   }
 
-  const unlisted = entries["unlisted"];
+  const { unlisted } = entries;
   if (unlisted !== undefined) {
     if (unlisted === "show" || unlisted === "hide") {
       config.unlisted = unlisted;

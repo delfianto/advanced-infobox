@@ -1,13 +1,13 @@
-import type { BlockConfig } from "src/model/block-config";
-import type { InfoboxTemplate } from "src/model/template";
-import type { InfoboxSettings } from "src/settings/settings";
 import {
   asDisplayString,
   classifyValue,
+  type FieldValue,
   normalizeTags,
   prettifyKey,
-  type FieldValue,
 } from "src/model/values";
+import { type BlockConfig } from "src/model/block-config";
+import { type InfoboxSettings } from "src/settings/settings";
+import { type InfoboxTemplate } from "src/model/template";
 
 /**
  * The renderable shape of an infobox, derived from a note's flat frontmatter.
@@ -112,7 +112,7 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
 
   // Structure precedence: per-note block > template body sections >
   // template frontmatter order > zero-config (single unlabeled section).
-  let sectionSpecs: Array<{ label?: string; keys: string[] }> | undefined = blockConfig.sections;
+  let sectionSpecs: { label?: string; keys: string[] }[] | undefined = blockConfig.sections;
   if (!sectionSpecs && template) {
     if (template.sections.length > 0) {
       sectionSpecs = template.sections;

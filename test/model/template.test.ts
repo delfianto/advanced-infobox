@@ -16,10 +16,10 @@ function source(
   const listItems: TemplateSource["listItems"] = [];
   let offset = 0;
   for (const line of body.split("\n")) {
-    if (/^#{1,6}\s/.test(line)) {
-      headings.push({ text: line.replace(/^#{1,6}\s+/, "").trim(), offset });
-    } else if (/^\s*-\s/.test(line)) {
-      const indented = /^\s+-/.test(line);
+    if (/^#{1,6}\s/u.test(line)) {
+      headings.push({ text: line.replace(/^#{1,6}\s+/u, "").trim(), offset });
+    } else if (/^\s*-\s/u.test(line)) {
+      const indented = /^\s+-/u.test(line);
       listItems.push({
         start: offset,
         end: offset + line.length,

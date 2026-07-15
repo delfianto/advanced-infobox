@@ -36,7 +36,7 @@ export class Notice {
 export const MarkdownRenderer = {
   render: notImplemented("MarkdownRenderer.render"),
 };
-export const normalizePath = (p: string) => p.replace(/\/+/g, "/").replace(/^\/+/, "");
+export const normalizePath = (p: string) => p.replaceAll(/\/+/gu, "/").replace(/^\/+/u, "");
 export const Platform = {
   isMobile: false,
   isMobileApp: false,

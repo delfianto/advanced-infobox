@@ -396,8 +396,10 @@ cache-based template parser (frontmatter labels + order, body headings/list item
 `- key: Label` overrides, reserved `unlisted` key, wikilinked keys unwrapped); precedence:
 block sections > template body sections > template frontmatter order > zero-config, and
 block `unlisted` > template `unlisted`; template folder + template property settings with
-folder autocomplete; sample templates (person, place, organization, character) created on
-demand by a command; "Insert infobox with template" (fuzzy picker) and "Add missing template
+folder autocomplete; built-in templates authored as real markdown files in `src/templates/`
+(bundled via vite `?raw` imports) and created on demand by a command — mechanism demos
+(person, place, organization, character) plus ready-to-use TTRPG sheets (dnd = D&D 5e,
+cyberpunk = Cyberpunk RED, wod = World of Darkness); "Insert infobox with template" (fuzzy picker) and "Add missing template
 properties to note" (scaffolds keys via `fileManager.processFrontMatter`, offering a picker
 and writing the template property when the note has none).
 

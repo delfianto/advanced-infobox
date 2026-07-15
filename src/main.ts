@@ -1,19 +1,20 @@
-import { FuzzySuggestModal, Notice, Plugin, TFile, type App, type Editor } from "obsidian";
-import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
-import { TemplateRegistry } from "src/model/template-registry";
-import { DEFAULT_SETTINGS, sanitizeCssLength, type InfoboxSettings } from "src/settings/settings";
-import { InfoboxSettingTab } from "src/settings/SettingsTab";
-import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import "src/styles.css";
+import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
+import { type Editor, Notice, Plugin, type TFile } from "obsidian";
+import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
+import { InfoboxSettingTab } from "src/settings/SettingsTab";
+import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
+import { TemplatePickerModal } from "src/view/TemplatePickerModal";
+import { TemplateRegistry } from "src/model/template-registry";
 
 // vite `define` replacement has proven unreliable on incremental watch
 // rebuilds (rolldown alpha drops it for re-transformed modules), so read the
 // injected constants defensively — a missing define must never crash onload.
-const BUILD_TIME = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "unknown";
-const DEV_BUILD = typeof __DEV_BUILD__ !== "undefined" ? __DEV_BUILD__ : false;
+const BUILD_TIME = typeof __BUILD_TIME__ === "undefined" ? "unknown" : __BUILD_TIME__;
+const DEV_BUILD = typeof __DEV_BUILD__ === "undefined" ? false : __DEV_BUILD__;
 
 export default class AdvancedInfoboxPlugin extends Plugin {
-  settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
+  override settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
   readonly templates = new TemplateRegistry(this.app, () => this.settings.templateFolder);
 
   private readonly children = new Set<InfoboxRenderChild>();
@@ -25,7 +26,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
    */
   private readonly lpCollapseState = new Map<string, boolean>();
 
-  async onload(): Promise<void> {
+  override async onload(): Promise<void> {
     // Proves which build Obsidian actually loaded; the toast is dev-only.
     if (DEV_BUILD) new Notice(`Advanced Infobox build ${BUILD_TIME}`);
     console.log(`[advanced-infobox] build ${BUILD_TIME}`);
@@ -96,7 +97,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     this.applySettingsCss();
   }
 
-  onunload(): void {
+  override onunload(): void {
     this.styleEl?.remove();
     this.styleEl = null;
   }
@@ -144,7 +145,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       return;
     }
     new TemplatePickerModal(this.app, ids, (id) => {
-      editor.replaceSelection("```infobox\ntemplate: " + id + "\n```\n");
+      editor.replaceSelection(`\`\`\`infobox\ntemplate: ${id}\n\`\`\`\n`);
     }).open();
   }
 
@@ -252,28 +253,5 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       decls.push(`--aib-label-align: ${this.settings.labelAlign}`);
     }
     this.styleEl.textContent = decls.length > 0 ? `body { ${decls.join("; ")}; }` : "";
-  }
-}
-
-class TemplatePickerModal extends FuzzySuggestModal<string> {
-  constructor(
-    app: App,
-    private readonly templateIds: string[],
-    private readonly onPick: (id: string) => void,
-  ) {
-    super(app);
-    this.setPlaceholder("Pick an infobox template…");
-  }
-
-  getItems(): string[] {
-    return this.templateIds;
-  }
-
-  getItemText(id: string): string {
-    return id;
-  }
-
-  onChooseItem(id: string): void {
-    this.onPick(id);
   }
 }
