@@ -7,44 +7,62 @@ background: Background
 player: Player
 ---
 
-D&D 5e character sheet. Edit freely — this is an ordinary note; rename
-sections, drop keys you don't track, and every character using
-`infobox: dnd` follows along.
+D&D 5e character sheet. This is an ordinary note — rename sections, reorder
+or drop keys, and every character with `infobox: dnd` follows along. A section
+whose keys a character doesn't have simply doesn't render, so martial
+characters skip Spellcasting automatically.
 
 ## Identity
 - race
 - class
 - level
-- alignment
 - background
+- alignment
+- experience: XP
 - player
 
 ## Ability Scores
-- strength
-- dexterity
-- constitution
-- intelligence
-- wisdom
-- charisma
+- strength: STR
+- dexterity: DEX
+- constitution: CON
+- intelligence: INT
+- wisdom: WIS
+- charisma: CHA
 
 ## Combat
 - armor_class: AC
+- initiative
+- speed
 - hit_points: HP
 - hit_dice: Hit Dice
-- speed
-- initiative
 - proficiency_bonus: Proficiency
-- saving_throws
+- saving_throws: Saving Throws
 - inspiration
 
-## Traits
+## Proficiencies & Languages
+- skills
 - senses
 - languages
-- features
 - proficiencies
 
-## Loadout
+## Spellcasting
+- spellcasting_ability: Spellcasting Ability
+- spell_save_dc: Spell Save DC
+- spell_attack_bonus: Spell Attack Bonus
+- cantrips
+- prepared_spells: Prepared Spells
+- spell_slots: Spell Slots
+
+## Equipment
 - weapons
 - equipment
-- prepared_spells
-- spell_slots: Spell Slots
+- currency
+
+## Personality
+- personality_traits: Personality Traits
+- ideals
+- bonds
+- flaws
+
+## Features & Traits
+- features
