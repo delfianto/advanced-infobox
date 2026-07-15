@@ -8,6 +8,7 @@ import {
   type BooleanStyle,
   type Density,
   type LivePreviewPresentation,
+  type LpCollapse,
   type Placement,
   type TextAlign,
   type VisualPreset,
@@ -57,6 +58,23 @@ export class InfoboxSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.livePreview)
           .onChange(async (value) => {
             this.plugin.settings.livePreview = value as LivePreviewPresentation;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Live Preview collapse")
+      .setDesc(
+        "Adds a toggle on the title to fold the box away while writing. Reading view always shows it expanded.",
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("off", "Off")
+          .addOption("expanded", "Collapsible, start expanded")
+          .addOption("collapsed", "Collapsible, start collapsed")
+          .setValue(this.plugin.settings.lpCollapse)
+          .onChange(async (value) => {
+            this.plugin.settings.lpCollapse = value as LpCollapse;
             await this.plugin.saveSettings();
           }),
       );

@@ -12,6 +12,9 @@ export class InfoboxModel {
   errors = $state<string[]>([]);
   arrayStyle = $state<ArrayStyle>("list");
   booleanStyle = $state<BooleanStyle>("check");
+  /** Collapse affordance enabled (Live Preview only; CSS gates the effect). */
+  collapsible = $state(false);
+  collapsed = $state(false);
 }
 
 /**
@@ -25,4 +28,6 @@ export interface RenderContext {
   resolveImage: (raw: string) => string | null;
   /** ISO date string → user-formatted date (settings.dateFormat). */
   formatDate: (iso: string) => string;
+  /** Remembers the user's collapse toggle across CM6 widget remounts. */
+  persistCollapse: (collapsed: boolean) => void;
 }

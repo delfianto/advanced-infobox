@@ -37,6 +37,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     const { config, errors } = parseBlockConfig(this.source);
     this.blockConfig = config;
     this.model.errors = errors;
+    this.model.collapsed = this.plugin.initialCollapsed(this.sourcePath);
     this.refresh();
 
     this.registerEvent(
@@ -53,6 +54,8 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
           renderMarkdown: createMarkdownRenderer(this.plugin.app, this.sourcePath, this),
           resolveImage: (raw: string) => this.resolveImage(raw),
           formatDate: (iso: string) => this.formatDate(iso),
+          persistCollapse: (collapsed: boolean) =>
+            this.plugin.rememberCollapsed(this.sourcePath, collapsed),
         },
       },
     });
@@ -88,6 +91,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     });
     this.model.arrayStyle = this.plugin.settings.arrayStyle;
     this.model.booleanStyle = this.plugin.settings.booleanStyle;
+    this.model.collapsible = this.plugin.settings.lpCollapse !== "off";
     this.applyContainerClasses();
   }
 

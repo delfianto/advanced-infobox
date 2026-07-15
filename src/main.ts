@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 import { DEFAULT_SETTINGS, sanitizeCssLength, type InfoboxSettings } from "src/settings/settings";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
@@ -9,8 +9,17 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
   private readonly children = new Set<InfoboxRenderChild>();
   private styleEl: HTMLStyleElement | null = null;
+  /**
+   * Session-only collapse state per note path. CM6 remounts widgets freely
+   * while editing; without this, a box the user expanded would snap back to
+   * its default on every remount.
+   */
+  private readonly lpCollapseState = new Map<string, boolean>();
 
   async onload(): Promise<void> {
+    // Proves which build Obsidian actually loaded; the toast is dev-only.
+    if (__DEV_BUILD__) new Notice(`Advanced Infobox build ${__BUILD_TIME__}`);
+    console.log(`[advanced-infobox] build ${__BUILD_TIME__}`);
     await this.loadSettings();
 
     this.registerMarkdownCodeBlockProcessor("infobox", (source, el, ctx) => {
@@ -36,6 +45,15 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
   attach(child: InfoboxRenderChild): void {
     this.children.add(child);
+  }
+
+  initialCollapsed(sourcePath: string): boolean {
+    if (this.settings.lpCollapse === "off") return false;
+    return this.lpCollapseState.get(sourcePath) ?? this.settings.lpCollapse === "collapsed";
+  }
+
+  rememberCollapsed(sourcePath: string, collapsed: boolean): void {
+    this.lpCollapseState.set(sourcePath, collapsed);
   }
 
   detach(child: InfoboxRenderChild): void {

@@ -47,6 +47,13 @@ function copyManifest(): Plugin {
 export default defineConfig({
   plugins: [svelte(), copyManifest()],
 
+  define: {
+    // Stamped into the bundle so a running plugin can prove which build it is.
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    // Dev (watch) builds announce themselves with a Notice; releases stay quiet.
+    __DEV_BUILD__: JSON.stringify(isWatch),
+  },
+
   resolve: {
     alias: {
       // Source files use `src/...` as bare imports (no leading ./)
