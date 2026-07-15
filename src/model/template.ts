@@ -1,5 +1,5 @@
 /**
- * Pure parsing of an infobox template note (see PLAN.md §3.2).
+ * Pure parsing of an infobox template note (see docs/research-notes.md §3.2).
  *
  * A template is an ordinary markdown note: its frontmatter maps property
  * keys to display labels (key order = display order), and its body may add

@@ -62,7 +62,7 @@ hook. Native Bases **cards do not expose a file link** in their DOM, so a card's
 isn't hoverable and hover is effectively table-first. (The plugin deliberately does *not*
 guess the note from a card's title text, which would show the wrong infobox on any mismatch.)
 If full card hover matters to you, the clean path is a first-class custom Bases view via
-`registerBasesView` — see [`PLAN_PHASE4.md` §8.1](../PLAN_PHASE4.md).
+`registerBasesView` — noted in the [backlog](../AGENTS.md#backlog-and-parked-ideas).
 
 ## See also
 

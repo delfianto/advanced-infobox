@@ -69,9 +69,9 @@ view** (a gallery), with the template's labels becoming column names. The genera
 
 And it goes the other way too: with **Infobox on hover in Bases** enabled
 ([setting](settings.md), on by default), hovering a character's name in that table pops the
-full sheet — the same infobox, floating over the Base. See
-[`PLAN_PHASE4.md` §8.1](../PLAN_PHASE4.md) for the design notes and the one caveat (native
-Bases *cards* don't expose a file link, so hover is table-primary).
+full sheet — the same infobox, floating over the Base. See [Bases](bases.md) for the full
+walkthrough and the one caveat (native Bases *cards* don't expose a file link, so hover is
+table-primary).
 
 ## See also
 

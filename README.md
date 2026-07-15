@@ -27,7 +27,8 @@ entitlement is not.
 
 ## Why another infobox plugin
 
-Every existing option gets the data model wrong (full write-up in [PLAN.md](PLAN.md)):
+Every existing option gets the data model wrong (full write-up in the
+[research notes](docs/research-notes.md)):
 
 - Code-block infoboxes ([mpospirit](https://github.com/mpospirit/obsidian-infobox)) make
   you **duplicate your frontmatter** into a hand-parsed pseudo-YAML block. One stray colon
@@ -187,5 +188,5 @@ deploy can never gaslight you (ask me how I know).
 ## Credits
 
 Project structure mirrors [inkwell](https://github.com/delfianto/inkwell) (Bun + Vite+ +
-Svelte 5 + strict TS). Design informed by the prior art it replaces — see
-[PLAN.md](PLAN.md) for the full research. MIT licensed.
+Svelte 5 + strict TS). Design informed by the prior art it replaces — see the
+[research notes](docs/research-notes.md) for the full research. MIT licensed.
