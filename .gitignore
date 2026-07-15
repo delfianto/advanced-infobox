@@ -19,8 +19,15 @@ data.json
 *.DS_Store
 
 # test vault
+# Track only the config that makes the demo vault open right (community
+# plugins + the hot-reload markers). Ignore volatile per-session state that
+# Obsidian rewrites on open (workspace layout, empty app/appearance, core
+# plugin toggles) and the deployed plugin build.
 test-vault/.obsidian/workspace
 test-vault/.obsidian/workspace.json
+test-vault/.obsidian/app.json
+test-vault/.obsidian/appearance.json
+test-vault/.obsidian/core-plugins.json
 test-vault/.obsidian/plugins/advanced-infobox/*.css
 test-vault/.obsidian/plugins/advanced-infobox/*.js
 test-vault/.obsidian/plugins/advanced-infobox/*.json
