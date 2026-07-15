@@ -652,8 +652,7 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
 
 /* Give the interactive controls a consistent width so the column of dropdowns,
    inputs, and sliders reads as one tidy, aligned group. */
-.aib-settings .setting-item-control input[type="text"],
-.aib-settings .setting-item-control input[type="range"] {
+.aib-settings .setting-item-control input[type="text"] {
   width: 14em;
   max-width: 100%;
 }
@@ -661,4 +660,17 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
 .aib-settings .setting-item-control select {
   min-width: 14em;
   max-width: 100%;
+}
+
+/* Slider + its value label together span roughly the same width as the other
+   controls, so the column stays aligned. */
+.aib-settings .setting-item-control input[type="range"] {
+  width: 11em;
+}
+
+.aib-slider-value {
+  min-width: 2.5em;
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
