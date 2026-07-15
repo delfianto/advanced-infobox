@@ -42,6 +42,12 @@ export interface InfoboxSettings {
   density: Density;
   visualPreset: VisualPreset;
   showTags: boolean;
+  /**
+   * In-box editing: make boolean and number fields directly editable, writing
+   * straight to frontmatter via processFrontMatter. Opt-in; text, date, and
+   * list fields stay read-only for now.
+   */
+  editInBox: boolean;
   titleKey: string;
   subtitleKey: string;
   imageKey: string;
@@ -69,6 +75,7 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   density: "normal",
   visualPreset: "native",
   showTags: true,
+  editInBox: false,
   titleKey: "title",
   subtitleKey: "subtitle",
   imageKey: "image",

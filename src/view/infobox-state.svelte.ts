@@ -15,6 +15,8 @@ export class InfoboxModel {
   /** Collapse affordance enabled (Live Preview only; CSS gates the effect). */
   collapsible = $state(false);
   collapsed = $state(false);
+  /** In-box editing enabled (mirrors settings.editInBox); gates field editors. */
+  editEnabled = $state(false);
 }
 
 /**
@@ -30,4 +32,9 @@ export interface RenderContext {
   formatDate: (iso: string) => string;
   /** Remembers the user's collapse toggle across CM6 widget remounts. */
   persistCollapse: (collapsed: boolean) => void;
+  /** Writes a scalar edit straight to the note's frontmatter. */
+  commitField: (key: string, value: number | boolean) => void;
+  /** Bracket a focused edit so refreshes defer until it settles (echo-loop guard). */
+  beginEdit: () => void;
+  endEdit: () => void;
 }

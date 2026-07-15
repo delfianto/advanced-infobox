@@ -264,6 +264,24 @@ export class InfoboxSettingTab extends PluginSettingTab {
         }),
       );
 
+    // ── Editing ────────────────────────────────────────────────
+
+    new Setting(containerEl).setName("Editing").setHeading();
+
+    new Setting(containerEl)
+      .setName("Edit properties in infobox")
+      .setDesc(
+        "Make boolean and number fields editable in the box: click a checkbox to flip it, or type " +
+          "into a number field (Enter or clicking away commits, Escape cancels). Edits are written " +
+          "straight to the note's frontmatter. Text, date, and list fields stay read-only for now.",
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.editInBox).onChange(async (value) => {
+          this.plugin.settings.editInBox = value;
+          await this.plugin.saveSettings();
+        }),
+      );
+
     // ── Templates ──────────────────────────────────────────────
 
     new Setting(containerEl).setName("Templates").setHeading();

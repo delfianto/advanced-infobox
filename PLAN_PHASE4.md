@@ -91,21 +91,43 @@ registry (`templates.ids()`), and frontmatter keys of the current note for
 `exclude`/`sections` lists. Trigger detection: `editor.getLine` scan upward
 for the opening fence. Moderate effort, big ergonomics win.
 
-## 3. Property write-back (inline editing in the box)
+## 3. Property write-back (inline editing in the box) — *v1 (boolean + number) shipped 2026-07-15, verified in Obsidian 1.12.7*
 
 Clicking a value in the infobox edits it; commit via
-`fileManager.processFrontMatter` (never touches the body). Svelte makes the
-edit-state easy; the hard parts:
+`fileManager.processFrontMatter` (never touches the body). Behind the global
+**Edit properties in infobox** toggle (default off).
 
-- Type-aware editors (text, number stepper, checkbox toggle, date picker,
-  list add/remove) — reuse `FieldValue.kind`.
-- Echo loop: our own write fires `metadataCache.changed` → refresh → remount
-  of the editor mid-typing. Needs an "editing" latch that defers refresh.
-- Live Preview focus: the widget must not fight CM6 for the cursor
-  (contenteditable inside a widget is fine; keyboard events need
-  stopPropagation).
-- Scope v1 to booleans + numbers (safe, high value for TTRPG stat bumps),
-  strings later, lists last.
+**v1 shipped** — scalar booleans and numbers only (the safe, high-value slice:
+TTRPG stat bumps, flags). Verified end to end by driving real Obsidian (CDP) in
+both Reading view and Live Preview: boolean toggle and number commit both write
+frontmatter and the box updates in place; strings/dates/lists stay read-only.
+
+- `src/model/edit.ts` — pure gates `isEditableValue` (boolean|number) and
+  `parseNumberInput` (rejects empty/NaN/Infinity), unit-tested.
+- Editors live at the field-row level in `Infobox.svelte` (a boolean button
+  reusing the ✓/✗ display; an `<input type=number>`), never inside the
+  recursive `fieldValue` snippet, so nested list items are never editable.
+  Gated on `model.editEnabled` + `isEditableValue`.
+- Commit: `InfoboxRenderChild.commitField` → `processFrontMatter`. Numbers
+  commit on blur/Enter, revert on Escape or invalid input.
+- **Echo-loop latch** (the crux): the child's own `metadataCache."changed"`
+  listener re-enters `refresh()`, which reassigns `model.vm` and would tear down
+  a live `<input>` mid-edit. `beginEdit`/`endEdit` (an `editDepth` counter)
+  defer refresh while a field editor is focused, reconciling once it settles.
+  Verified: an external write during a focused edit leaves the input in place,
+  focused, value intact, then both writes reconcile.
+- Live Preview focus: the number `<input>` receives focus and keystrokes inside
+  the CM6 code-block widget (keydown `stopPropagation` keeps CM6 from treating
+  them as document input); no `contenteditable` needed.
+
+Remaining tiers (deferred, each its own increment):
+- **Strings/dates**: text input (careful with YAML quoting and date-string
+  collisions) and a date picker round-tripping `settings.dateFormat`.
+- **Lists**: add/remove/edit — the hard one (array semantics; single-item lists
+  render plain and empties are filtered, both lossy).
+- Only fields backed directly by `frontmatter[key]` are editable; header fields
+  sourced via block-option overrides (`image`/`caption`) and the merged `tags`
+  are intentionally not click-to-edit.
 
 ## 4. Docs (README is still the 3-line stub)
 
