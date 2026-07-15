@@ -81,6 +81,16 @@ export class InfoboxSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Remember collapse state")
+      .setDesc("Keep each note's Live Preview collapse toggle across Obsidian restarts.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.lpCollapseRemember).onChange(async (value) => {
+          this.plugin.settings.lpCollapseRemember = value;
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
       .setName("Width")
       .setDesc("CSS length for the infobox width (e.g. 22em, 320px). Capped on narrow panes.")
       .addText((text) =>

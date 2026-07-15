@@ -45,6 +45,14 @@ settings:
     title: Corner radius
     type: variable-text
     default: 8px
+  - id: aib-border-width
+    title: Border width
+    type: variable-text
+    default: 1px
+  - id: aib-image-radius
+    title: Image corner radius
+    type: variable-text
+    default: 4px
   - id: aib-heading-typography
     title: Typography
     type: heading
@@ -74,6 +82,10 @@ settings:
     title: Section header size
     type: variable-text
     default: 0.8em
+  - id: aib-section-weight
+    title: Section header weight
+    type: variable-text
+    default: '600'
   - id: aib-label-align
     title: Label alignment
     type: variable-select
