@@ -1,0 +1,66 @@
+views:
+  - type: table
+    name: Table
+    order:
+      - file.name
+      - note.race
+      - note.class
+      - note.level
+      - note.background
+      - note.alignment
+      - note.experience
+      - note.player
+    sort:
+      - property: file.name
+        direction: ASC
+  - type: cards
+    name: Cards
+    order:
+      - note.race
+      - note.class
+      - note.level
+      - note.background
+    sort:
+      - property: file.name
+        direction: ASC
+    title: note.title
+    cardSize: 260
+filters:
+  and:
+    - file.inFolder("Characters")
+    - note.infobox == "dnd"
+properties:
+  note.race:
+    displayName: Race
+  note.class:
+    displayName: Class
+  note.level:
+    displayName: Level
+  note.background:
+    displayName: Background
+  note.alignment:
+    displayName: Alignment
+  note.experience:
+    displayName: XP
+  note.player:
+    displayName: Player
+  note.strength:
+    displayName: STR
+  note.dexterity:
+    displayName: DEX
+  note.constitution:
+    displayName: CON
+  note.intelligence:
+    displayName: INT
+  note.wisdom:
+    displayName: WIS
+  note.charisma:
+    displayName: CHA
+  note.armor_class:
+    displayName: AC
+  note.hit_points:
+    displayName: HP
+  note.proficiency_bonus:
+    displayName: Proficiency
+  note.spell_save_dc:
+    displayName: Spell Save DC
