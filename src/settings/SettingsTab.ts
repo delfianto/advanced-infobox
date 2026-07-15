@@ -67,7 +67,7 @@ export class InfoboxSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOption("full-width", "Full width")
-          .addOption("aligned", "Aligned to placement side")
+          .addOption("aligned", "Placement side")
           .setValue(this.plugin.settings.livePreview)
           .onChange(async (value) => {
             this.plugin.settings.livePreview = value as LivePreviewPresentation;
@@ -167,16 +167,17 @@ export class InfoboxSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Excluded properties")
-      .setDesc("Comma-separated frontmatter keys that are never shown as fields.")
-      .addText((text) =>
+      .setDesc("Frontmatter keys never shown as fields — one per line (commas also work).")
+      .addTextArea((text) => {
         text
-          .setPlaceholder(DEFAULT_SETTINGS.excludeKeys.join(", "))
-          .setValue(this.plugin.settings.excludeKeys.join(", "))
+          .setPlaceholder(DEFAULT_SETTINGS.excludeKeys.join("\n"))
+          .setValue(this.plugin.settings.excludeKeys.join("\n"))
           .onChange(async (value) => {
             this.plugin.settings.excludeKeys = parseKeyList(value);
             await this.plugin.saveSettings();
-          }),
-      );
+          });
+        text.inputEl.rows = 4;
+      });
 
     new Setting(containerEl)
       .setName("Custom labels")
