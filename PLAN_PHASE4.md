@@ -75,7 +75,14 @@ Remaining / known limitations:
   frontmatter is untested (the user's real vault has these; the isolated test
   vault does not).
 
-## 2. Block-option editor suggestion
+## 2. Block-option editor suggestion — *low priority (deferred 2026-07-15)*
+
+**Deferred, not scheduled.** Pure typing convenience, not correctness. The
+block language is tiny (7 keys, a few enum values, all documented in the
+README), and auto-embed (§1) removes the need to write a block at all for
+qualifying notes — shrinking the surface this would help. Build only if
+hand-writing blocks with options becomes frequent enough that mistyping is a
+real annoyance. Spec kept below for cold resume.
 
 `EditorSuggest` scoped to inside ` ```infobox ` fences: complete option keys
 (`placement`, `exclude`, `sections`, `unlisted`, `image`, `caption`,
