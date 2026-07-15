@@ -1,4 +1,4 @@
-import { type App, PluginSettingTab, Setting } from "obsidian";
+import { type App, Notice, PluginSettingTab, Setting } from "obsidian";
 import {
   type ArrayStyle,
   type BooleanStyle,
@@ -315,6 +315,26 @@ export class InfoboxSettingTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.basesHoverPreview).onChange(async (value) => {
           this.plugin.settings.basesHoverPreview = value;
           await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName("Infobox view in Bases")
+      .setDesc(
+        "Adds an “Infobox” view type to Bases that renders each entry as its full infobox " +
+          "(a gallery of cards) — pick it from a Base's view menu. Needs Obsidian with Bases; " +
+          "reload to fully apply a change.",
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.basesInfoboxView).onChange(async (value) => {
+          this.plugin.settings.basesInfoboxView = value;
+          await this.plugin.saveSettings();
+          if (value) this.plugin.registerInfoboxBasesView();
+          new Notice(
+            value
+              ? "Infobox view enabled — reopen a Base and pick it from the view menu."
+              : "Reload Obsidian to remove the Infobox view.",
+          );
         }),
       );
 

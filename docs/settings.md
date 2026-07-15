@@ -48,6 +48,7 @@ active note's folder, using their detected [template](templates.md). See the
 | Setting | Default | Notes |
 | --- | --- | --- |
 | Infobox on hover in Bases | **on** | Show a note's infobox in a popover when you hover a link to it inside a Base (e.g. a table's file-name column). Best-effort — reads Bases' rendered markup, so it does nothing without Bases. Native cards don't expose a file link, so hover is table-primary. |
+| Infobox view in Bases | **off** | Adds an "Infobox" view type to Bases that renders each entry as its full infobox (a gallery) — pick it from a Base's view menu. Needs Obsidian 1.10+; reload to fully apply a change. |
 
 ## Templates
 

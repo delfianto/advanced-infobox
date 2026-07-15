@@ -54,6 +54,11 @@ export interface InfoboxSettings {
    * reads Bases' rendered DOM.
    */
   basesHoverPreview: boolean;
+  /**
+   * Register an "Infobox" view type in Obsidian Bases that renders each entry
+   * as its full infobox (a gallery of cards). Opt-in; needs Obsidian 1.10+.
+   */
+  basesInfoboxView: boolean;
 }
 
 export const DEFAULT_SETTINGS: InfoboxSettings = {
@@ -80,6 +85,7 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   templateKey: "infobox",
   templateFolder: "Templates/Infobox",
   basesHoverPreview: true,
+  basesInfoboxView: false,
 };
 
 export const PLACEMENTS: readonly Placement[] = ["right", "left", "full"];

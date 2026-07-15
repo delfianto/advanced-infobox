@@ -697,3 +697,23 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
   width: 100%;
   margin: 0;
 }
+
+/* ── Bases "Infobox" view ──────────────────────────────────── */
+
+/* The custom Bases view: a responsive gallery of infobox cards, one per entry. */
+.aib-bases-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--aib-width, 22em), 100%), 1fr));
+  gap: 1em;
+  padding: 1em;
+  align-items: start;
+  overflow-y: auto;
+}
+
+/* Placement/float rules are markdown-view-scoped, so here each card just fills
+   its grid cell. */
+.aib-bases-view .aib-container {
+  float: none;
+  width: 100%;
+  margin: 0;
+}
