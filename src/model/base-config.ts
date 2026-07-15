@@ -1,6 +1,6 @@
 /**
  * Pure builder for the contents of an Obsidian Base (`.base`) file, generated
- * from a folder of infobox notes (see PLAN_PHASE4.md §8.1). Never imports
+ * from a folder of infobox notes (see docs/bases.md). Never imports
  * "obsidian": the caller serializes the returned object with `stringifyYaml`
  * and writes it, keeping this trivially unit-testable.
  *

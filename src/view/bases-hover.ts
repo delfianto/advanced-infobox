@@ -8,7 +8,7 @@ const GAP = 8;
 
 /**
  * Shows a note's infobox in a floating popover when the pointer rests on its
- * link inside a Bases view — the "row → infobox hover card" (PLAN_PHASE4 §8).
+ * link inside a Bases view — the "row → infobox hover card" (see docs/bases.md).
  *
  * Best-effort by nature: it reads Bases' rendered DOM (`.bases-view` and the
  * `[data-href]` links Bases renders for file references), so it simply no-ops

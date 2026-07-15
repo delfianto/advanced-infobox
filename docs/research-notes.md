@@ -1,4 +1,4 @@
-# Advanced Infobox — Plan
+# Advanced Infobox — Research & design notes
 
 A wiki-style infobox plugin for Obsidian that treats **plain, flat frontmatter as the single
 source of truth**. Presentation (placement, styling, fonts, field layout) is configured in plugin
@@ -321,97 +321,7 @@ Per-note: `placement` in the config block; template selection via the flat `info
 
 ---
 
-## 4. Tech stack & project structure (per inkwell)
-
-- **Runtime/PM**: Bun (`bun.lock`, `bunfig.toml`)
-- **Build**: Vite via vite-plus (`vp build`, `vp lint`, `vp fmt`, `vp test`); CJS lib build →
-  `main.js` + `styles.css` + copied `manifest.json`; `--watch` deploys into `$PLUGINS_DIR`
-  (direnv `.envrc`) or the in-repo test vault, with `.hotreload` for the hot-reload plugin
-- **UI**: Svelte 5 (runes) via `@sveltejs/vite-plugin-svelte`
-- **Language**: TypeScript 6.x, `obsidian` typings ^1.13
-- **Tests**: Vitest + `test/__mocks__/obsidian.ts`; CI via GitHub Actions (unit-tests + release
-  workflows, as in inkwell)
-
-```
-advanced-infobox/
-├── manifest.json / versions.json
-├── package.json / bunfig.toml / tsconfig.json
-├── vite.config.mts / svelte.config.js / vitest.config.ts
-├── .envrc.example
-├── PLAN.md
-├── src/
-│   ├── main.ts                  # plugin entry: processor + settings registration
-│   ├── settings/
-│   │   ├── settings.ts          # schema, defaults, migration
-│   │   ├── SettingsTab.ts       # native Setting API
-│   │   └── folder-suggest.ts    # template-folder autocomplete (inkwell pattern)
-│   ├── model/
-│   │   ├── schema.ts            # frontmatter → view-model normalization
-│   │   ├── template.ts          # template note parsing (labels, sections)
-│   │   ├── template-registry.ts # folder scan, id → note resolution, change watch
-│   │   ├── block-config.ts      # parseYaml + validation of the anchor block
-│   │   └── values.ts            # type-aware value formatting
-│   ├── view/
-│   │   ├── InfoboxRenderChild.ts # MarkdownRenderChild, cache subscription, Svelte mount
-│   │   ├── Infobox.svelte
-│   │   └── markdown.ts          # MarkdownRenderer attachment helper
-│   └── styles.css               # CSS vars + @settings manifest for Style Settings
-├── test/                        # vitest unit tests + obsidian mocks
-└── test-vault/                  # dev vault with hot-reload + sample notes per template
-```
-
----
-
-## 5. Milestones
-
-**Phase 0 — Scaffold**
-Repo tooling (bun, vite-plus, svelte, tsconfig, vitest, prettier), manifest, test vault with
-hot-reload, dev-deploy watch flow, CI workflows. Definition of done: empty plugin loads in the
-test vault and hot-reloads.
-
-**Phase 1 — MVP (frontmatter → box)**
-Code block processor + `InfoboxRenderChild`; zero-config rendering of flat frontmatter (title/
-image/caption/fields, global exclude list); markdown value rendering; live update on
-`metadataCache.changed`; base stylesheet on theme variables; global placement setting
-(right/left/full) + width; graceful error states (no frontmatter, missing image, bad block
-config); wiki-style section header rows via per-note block config (`sections`, `unlisted`) —
-the same grouping mechanism templates will drive vault-wide in Phase 3. Unit tests for
-`schema.ts` and `block-config.ts`.
-
-**Phase 2 — Customization depth** *(shipped)*
-Full settings tab (font size, density compact/normal/comfortable, visual preset
-Obsidian-native/Wikipedia-classic with dark-mode variant, Live Preview presentation,
-date/array/boolean formatting, key→label map, special-key remapping); per-note block
-overrides; Style Settings `@settings` manifest (~25 variables under Layout / Typography /
-Colors / Lists headings); pane-width responsive collapse via ResizeObserver — container
-queries were rejected because they would require stamping `container-type` onto Obsidian's
-own preview containers, too invasive; "Insert infobox" command (block-option editor
-suggestion deferred to Phase 4 polish). The plugin settings stylesheet emits only
-non-default values, so untouched settings remain fully drivable from Style Settings.
-
-**Phase 3 — Markdown templates** *(shipped)*
-Template registry (lazy parse + cache keyed by id, invalidated on template-folder
-changes/renames/deletes; editing a template live-updates every open infobox); pure
-cache-based template parser (frontmatter labels + order, body headings/list items by offset,
-`- key: Label` overrides, reserved `unlisted` key, wikilinked keys unwrapped); precedence:
-block sections > template body sections > template frontmatter order > zero-config, and
-block `unlisted` > template `unlisted`; template folder + template property settings with
-folder autocomplete; built-in templates authored as real markdown files in `src/templates/`
-(bundled via vite `?raw` imports) and created on demand by a command — mechanism demos
-(person, place, organization, character) plus ready-to-use TTRPG sheets (dnd = D&D 5e,
-cyberpunk = Cyberpunk RED, wod = World of Darkness); "Insert infobox with template" (fuzzy picker) and "Add missing template
-properties to note" (scaffolds keys via `fileManager.processFrontMatter`, offering a picker
-and writing the template property when the note has none).
-
-**Phase 4 — Polish & release**
-Optional auto-embed mode (render at top of note without an anchor — CM6 widget below
-frontmatter in LP, post-processor prepend in Reading; ship behind a toggle since Phase 1 anchor
-already covers both modes reliably); property write-back exploration (`fileManager.
-processFrontMatter`) for inline editing; docs with screenshots; community plugin submission.
-
----
-
-## 6. Risks & open questions
+## 4. Risks & open questions
 
 - **Live Preview quirks**: code-block widgets re-mount on scroll/edit churn in CM6; the render
   child must be cheap to construct (memoize view-model, avoid layout thrash).
@@ -428,5 +338,4 @@ processFrontMatter`) for inline editing; docs with screenshots; community plugin
   format hints (date patterns, units). Start with global type-based formatting only; a
   `key: "Label | date:YYYY"` mini-syntax is tempting but reintroduces exactly the DSL
   brittleness this plugin exists to avoid, so decide after real-world usage.
-- **Naming**: repo/plugin id `advanced-infobox`; CSS prefix `aib-`. Confirm display name before
-  community submission.
+- **Naming**: repo/plugin id `advanced-infobox`; CSS prefix `aib-`.

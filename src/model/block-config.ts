@@ -16,7 +16,7 @@ export interface BlockConfig {
   sections?: SectionSpec[];
   /** What happens to properties no section names. Default: shown at the end. */
   unlisted?: "show" | "hide";
-  /** Parsed and validated now; consumed by the template phase. */
+  /** Parsed and validated here; consumed later when the template is resolved. */
   template?: string;
 }
 

@@ -23,6 +23,10 @@ BRAT install instructions, see the [main README](../README.md).
 
 - **[TTRPG character sheets](ttrpg-example.md)** — a full 12-class D&D 5e roster built on a single template, showing the caster-vs-martial trick that makes whole sections appear and vanish on their own.
 
+## Background
+
+- **[Research notes](research-notes.md)** — the prior-art comparison and the design rationale behind the data model.
+
 ---
 
 > Every example in these docs comes from the in-repo [`test-vault/`](../test-vault) — open
