@@ -113,6 +113,20 @@ Built-in starters via the **"Create sample infobox templates"** command: `person
 `organization`, `character`, plus ready-to-use TTRPG sheets — `dnd` (D&D 5e), `cyberpunk`
 (Cyberpunk RED), `wod` (World of Darkness).
 
+## Bases integration
+
+Two links to Obsidian [Bases](https://help.obsidian.md/bases), both no-ops without the core
+Bases plugin:
+
+- **Create base from folder** (command) — generate a `.base` with a table view and a cards
+  view from a folder of notes, using the template they share. Column names come from the
+  template's labels, and the Base is filtered to that folder + template.
+- **Infobox on hover** (setting, on by default) — hovering a note's link inside a Base pops
+  its full infobox in a popover, reusing the in-note renderer. Best-effort (it reads Bases'
+  markup) and table-first, since native cards expose no file link.
+
+Full walkthrough with screenshots: **[docs/bases.md](docs/bases.md)**.
+
 ## Commands
 
 - **Insert infobox** — plain anchor block
