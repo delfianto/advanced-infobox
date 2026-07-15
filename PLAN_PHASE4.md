@@ -206,11 +206,130 @@ Deliberately out of scope (not editable):
 
 ## 8. Ideas parked (no commitment)
 
-- Bases integration: render an infobox from a Bases entry, or a "row →
-  infobox" hover card.
+- Bases integration — **two directions**:
+  - _Base → infobox_ (parked): render an infobox from a Bases entry, or a
+    "row → infobox" hover card.
+  - _infobox → Base_ (spec'd in §8.1 below, not committed): a command that
+    generates a `.base` from a folder of infobox notes.
 - Template inheritance (`extends: person` in template frontmatter).
 - Per-template CSS class (`aib-template-<id>` on the container) for
   type-specific theming — trivial to add when someone wants
   character-sheets styled differently from places.
 - ITS-style pipe modifiers on the block language (` ```infobox|left `) —
   redundant with block options; only if muscle memory demands it.
+
+### 8.1 Base generator — "Create base from folder" (spec'd 2026-07-15, not committed)
+
+**Idea.** A command that stamps out an Obsidian **Base** from a folder of
+infobox notes — e.g. a folder of TTRPG character cards → a roster table + a
+card gallery in one click. Framed as a _built-in Bases preset_, not a live
+view: a **one-shot generator** that writes a `.base` file the user then owns
+and edits. No sync, no coupling to Bases internals.
+
+**Why it fits.** A `.base` is plain YAML the plugin writes with `vault.create`
+— no private API. And the plugin's _template_ already encodes what a Base
+needs, so generating one is mostly projecting the template onto Bases' YAML.
+Extends the thesis ("flat frontmatter is the single source of truth") from one
+note (infobox) to a collection (Base), with the template as the shared schema.
+
+**Template → Base mapping.**
+
+| Infobox template piece            | Bases target                                    |
+| --------------------------------- | ----------------------------------------------- |
+| frontmatter key order             | table columns / card fields (`order:`)          |
+| section flattening                | sensible column subset / grouping               |
+| label overrides (`armor_class→AC`)| `properties.<id>.displayName`                   |
+| `templateKey` (`infobox:character`)| scoping filter (`note.infobox == "character"`) |
+| `titleKey`                        | cards `title:` (card heading property)          |
+| `imageKey`                        | cards `image:` (cover property)                 |
+
+**Command UX.** `Advanced Infobox: Create base from folder…` → modal: folder
+(default: active note's folder) · detected template (read the folder's notes'
+`templateKey`) · style Table / Cards / **Both** (Bases shows multiple views as
+tabs) · output path (default `<Folder>/<Folder>.base`). Confirm → resolve the
+template via `TemplateRegistry` → emit YAML → `vault.create` → open.
+
+**Confirmed `.base` schema** (Obsidian help docs + a real card base sampled
+2026-07-15; anything marked _inferred_ still needs a round-trip check in the
+target version):
+
+- Top-level keys: `filters`, `formulas`, `properties`, `views`.
+- `filters`: a bare expression string _or_ a `{ and | or | not: [...] }`
+  object (heterogeneous list, nestable).
+- Property refs: `file.*` built-ins (`file.name`, `file.basename`,
+  `file.folder`, `file.path`, `file.ext`, `file.tags`, `file.links`,
+  `file.mtime`, `file.ctime`, `file.size`), `note.<prop>` for frontmatter
+  (bare `<prop>` also works), `formula.<name>`.
+- Filter funcs: `file.inFolder("F")` (incl. subfolders), `file.hasTag(...)`,
+  `file.hasProperty("k")`, `file.hasLink(x)`; comparisons `==` / `!=`.
+- `properties`: `{ <id>: { displayName: "…" } }` (display only; not usable in
+  filters/formulas).
+- View: `type` (`table` | `cards`), `name`, `order: [ids]`,
+  `sort: [{ property, direction: ASC|DESC }]`, `limit`, view-scoped `filters`,
+  `groupBy: { property, direction }`, `summaries`.
+- Cards view: `image:` = cover property, `cardSize:` (px), `imageAspectRatio:`;
+  `title:` = card heading property _(inferred)_; `cover:` seen alongside
+  `image:` in the sample — likely a **legacy alias**, emit `image:` only
+  _(inferred)_.
+
+**Generated output** (from the test-vault `character` template):
+
+```yaml
+filters:
+  and:
+    - file.inFolder("Characters")
+    - note.infobox == "character"
+
+properties:
+  note.armor_class: { displayName: AC }
+  note.hit_points: { displayName: HP }
+
+views:
+  - type: table
+    name: Roster
+    order: [file.name, note.race, note.class, note.level, note.armor_class, note.hit_points]
+    sort:
+      - property: note.level
+        direction: DESC
+
+  - type: cards
+    name: Gallery
+    order: [note.race, note.class, note.level]
+    sort:
+      - property: file.name
+        direction: ASC
+    title: title
+    image: note.image
+    cardSize: 260
+    imageAspectRatio: 1.34
+```
+
+**Design calls.**
+
+- One-shot generator, not a synced view (robust; regenerate for a fresh one).
+- Table columns: default to `file.name` + first section + a couple headline
+  stats, not all ~20 template keys; offer "all keys" as an option.
+- Emit `displayName` only for template label overrides (Bases auto-prettifies
+  the rest) → no giant `properties` block.
+- Filter by folder **and** template property when a template is detected; fall
+  back to a union-of-keys base when the folder has no template.
+- Mixed-template folders: `groupBy: note.<templateKey>` in one base, or
+  generate per kind. MVP = single folder-scoped base.
+- Standardize emitted refs on explicit `note.*` / `file.*` (both forms work).
+
+**Risks / open items.**
+
+- Validate the _inferred_ cards keys (`title:`, `cover:`) by round-tripping a
+  UI-created base in the target Obsidian version — that file is the source of
+  truth.
+- `minAppVersion`: Bases shipped in 1.9; manifest is 1.4.0. Keep the core at
+  1.4 and gate _just this command_ on Bases availability (notice on older
+  versions) rather than raising the floor for everyone.
+- We own the emitted YAML → keep the schema in one module + a round-trip
+  fixture test so Bases version drift is a one-file fix.
+- Types are mostly free (lists render as list columns, `[[links]]` as links);
+  nested/object values are the edge, same as the infobox's read-only handling.
+
+**MVP.** Command → detect template → folder-scoped `.base` with a table + cards
+view, `displayName` overrides from the template, one-shot. A tight, shippable
+"built-in Bases preset."
