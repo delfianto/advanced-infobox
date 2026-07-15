@@ -60,7 +60,7 @@ function parseItemText(raw: string): { key: string; label?: string } | null {
   // First line only (list items may wrap), bullet/checkbox stripped.
   const text = raw
     .split("\n")[0]
-    .replace(/^\s*[-*+]\s*(\[.\]\s+)?/, "")
+    .replace(/^\s*[-*+]\s*(?:\[.\]\s+)?/u, "")
     .trim();
   if (text === "") return null;
 
@@ -68,7 +68,7 @@ function parseItemText(raw: string): { key: string; label?: string } | null {
   const keyPart = (colonIdx === -1 ? text : text.slice(0, colonIdx)).trim();
   const labelPart = colonIdx === -1 ? "" : text.slice(colonIdx + 1).trim();
 
-  const key = keyPart.replace(/^\[\[(.+)\]\]$/, "$1").trim();
+  const key = keyPart.replace(/^\[\[(?<inner>.+)\]\]$/u, "$<inner>").trim();
   if (key === "") return null;
   return labelPart === "" ? { key } : { key, label: labelPart };
 }
@@ -88,7 +88,7 @@ export function parseTemplate(source: TemplateSource): InfoboxTemplate {
   }
 
   // Assign each top-level list item to the closest heading above it.
-  const headings = [...source.headings].sort((a, b) => a.offset - b.offset);
+  const headings = [...source.headings].toSorted((a, b) => a.offset - b.offset);
   const sections: TemplateSectionSpec[] = [];
   const sectionFor = (offset: number): TemplateSectionSpec => {
     let label: string | undefined;
@@ -96,7 +96,7 @@ export function parseTemplate(source: TemplateSource): InfoboxTemplate {
       if (heading.offset > offset) break;
       label = heading.text;
     }
-    const last = sections[sections.length - 1];
+    const last = sections.at(-1);
     if (last && last.label === label) return last;
     const created: TemplateSectionSpec = label === undefined ? { keys: [] } : { label, keys: [] };
     sections.push(created);
@@ -105,7 +105,7 @@ export function parseTemplate(source: TemplateSource): InfoboxTemplate {
 
   const items = [...source.listItems]
     .filter((item) => item.parent < 0)
-    .sort((a, b) => a.start - b.start);
+    .toSorted((a, b) => a.start - b.start);
   for (const item of items) {
     const parsed = parseItemText(source.body.slice(item.start, item.end));
     if (!parsed) continue;

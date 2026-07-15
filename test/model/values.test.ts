@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { asDisplayString, classifyValue, normalizeTags, prettifyKey } from "src/model/values";
+import { describe, expect, it } from "vitest";
 
 describe("prettifyKey", () => {
   it("converts snake_case", () => {

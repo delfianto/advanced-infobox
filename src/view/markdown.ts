@@ -1,4 +1,4 @@
-import { MarkdownRenderer, type App, type Component } from "obsidian";
+import { type App, type Component, MarkdownRenderer } from "obsidian";
 
 /**
  * Bound markdown renderer for one note. `owner` ties rendered embeds/links
@@ -10,7 +10,7 @@ export function createMarkdownRenderer(
   owner: Component,
 ): (markdown: string, el: HTMLElement) => void {
   return (markdown, el) => {
-    while (el.firstChild) el.removeChild(el.firstChild);
+    while (el.firstChild) el.firstChild.remove();
     void MarkdownRenderer.render(app, markdown, el, sourcePath, owner);
   };
 }

@@ -1,5 +1,5 @@
-import { TFile, normalizePath, type App } from "obsidian";
-import { parseTemplate, type InfoboxTemplate, type TemplateSource } from "src/model/template";
+import { type App, normalizePath, TFile } from "obsidian";
+import { type InfoboxTemplate, parseTemplate, type TemplateSource } from "src/model/template";
 
 /**
  * Resolves template ids to parsed templates. Templates are ordinary notes in
@@ -20,7 +20,7 @@ export class TemplateRegistry {
 
   /** Is this file part of the template folder? Used for cache invalidation. */
   contains(path: string): boolean {
-    return path.startsWith(this.folder() + "/");
+    return path.startsWith(`${this.folder()}/`);
   }
 
   invalidate(path?: string): void {
@@ -28,18 +28,18 @@ export class TemplateRegistry {
       this.cache.clear();
       return;
     }
-    const basename = path.slice(path.lastIndexOf("/") + 1).replace(/\.md$/, "");
+    const basename = path.slice(path.lastIndexOf("/") + 1).replace(/\.md$/u, "");
     this.cache.delete(basename);
   }
 
   /** All template ids currently on disk (for pickers and suggestions). */
   ids(): string[] {
-    const folder = this.folder() + "/";
+    const folder = `${this.folder()}/`;
     return this.app.vault
       .getMarkdownFiles()
       .filter((f) => f.path.startsWith(folder))
       .map((f) => f.basename)
-      .sort();
+      .toSorted();
   }
 
   /** Returns null when the template note does not exist. */

@@ -1,88 +1,27 @@
+import character from "src/templates/character.md?raw";
+import cyberpunk from "src/templates/cyberpunk.md?raw";
+import dnd from "src/templates/dnd.md?raw";
+import organization from "src/templates/organization.md?raw";
+import person from "src/templates/person.md?raw";
+import place from "src/templates/place.md?raw";
+import wod from "src/templates/wod.md?raw";
+
 /**
  * Starter template notes, created on demand by the "Create sample infobox
- * templates" command. Each demonstrates a mechanism: frontmatter labels,
- * frontmatter-order-only (no body), body sections, and body label overrides.
+ * templates" command. Authored as real markdown files in src/templates/
+ * (bundled at build time via vite's ?raw imports) so they are editable,
+ * diffable, and previewable like any other note.
+ *
+ * person/place/organization/character demonstrate the mechanisms
+ * (frontmatter labels, order-only, body sections, body label overrides);
+ * dnd/cyberpunk/wod are ready-to-use TTRPG character sheets.
  */
 export const SAMPLE_TEMPLATES: Record<string, string> = {
-  person: `---
-born: Born
-died: Died
-nationality: Nationality
-occupation: Occupation
-known_for: Known for
-spouse: Spouse
-children: Children
----
-
-## Personal
-- born
-- died
-- nationality
-
-## Career
-- occupation
-- known_for
-
-## Family
-- spouse
-- children
-`,
-
-  place: `---
-country: Country
-region: Region
-population: Population
-area: Area
-elevation: Elevation
-founded: Founded
----
-
-No body sections: fields render in the frontmatter order above.
-`,
-
-  organization: `---
-founded: Founded
-founder: Founder
-headquarters: Headquarters
-industry: Industry
-employees: Employees
-website: Website
----
-`,
-
-  character: `---
-race: Race
-class: Class
-level: Level
-alignment: Alignment
-background: Background
----
-
-## Identity
-- race
-- class
-- level
-- alignment
-- background
-
-## Ability Scores
-- strength
-- dexterity
-- constitution
-- intelligence
-- wisdom
-- charisma
-
-## Combat
-- armor_class: AC
-- hit_points: HP
-- speed
-- proficiency_bonus
-- saving_throws
-- inspiration
-
-## Loadout
-- weapons
-- prepared_spells
-`,
+  person,
+  place,
+  organization,
+  character,
+  dnd,
+  cyberpunk,
+  wod,
 };

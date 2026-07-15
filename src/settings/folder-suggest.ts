@@ -1,4 +1,4 @@
-import { AbstractInputSuggest, TFolder, type App } from "obsidian";
+import { AbstractInputSuggest, type App, TFolder } from "obsidian";
 
 /** Vault-folder autocomplete for text inputs (inkwell's pattern). */
 export class FolderSuggest extends AbstractInputSuggest<TFolder> {
@@ -17,11 +17,11 @@ export class FolderSuggest extends AbstractInputSuggest<TFolder> {
       .slice(0, 20);
   }
 
-  renderSuggestion(folder: TFolder, el: HTMLElement): void {
+  override renderSuggestion(folder: TFolder, el: HTMLElement): void {
     el.setText(folder.path);
   }
 
-  selectSuggestion(folder: TFolder): void {
+  override selectSuggestion(folder: TFolder): void {
     this.inputEl.value = folder.path;
     this.inputEl.dispatchEvent(new Event("input"));
     this.close();

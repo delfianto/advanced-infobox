@@ -1,5 +1,5 @@
-import type { InfoboxViewModel } from "src/model/schema";
-import type { ArrayStyle, BooleanStyle } from "src/settings/settings";
+import { type ArrayStyle, type BooleanStyle } from "src/settings/settings";
+import { type InfoboxViewModel } from "src/model/schema";
 
 /**
  * Reactive bridge between the imperative render child and the Svelte

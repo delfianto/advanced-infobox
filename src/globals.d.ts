@@ -1,5 +1,10 @@
 declare module "*.css";
 
+declare module "*.md?raw" {
+  const content: string;
+  export default content;
+}
+
 /** Injected by vite define — ISO timestamp of the build. */
 declare const __BUILD_TIME__: string;
 

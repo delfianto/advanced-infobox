@@ -11,8 +11,10 @@
     "paths": {
       "*": ["./*"]
     },
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true
   },

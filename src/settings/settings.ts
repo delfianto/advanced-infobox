@@ -78,7 +78,7 @@ export const LIVE_PREVIEW_PRESENTATIONS: readonly LivePreviewPresentation[] = [
  */
 export function sanitizeCssLength(value: string, fallback: string): string {
   const trimmed = value.trim();
-  return /^[\w.%-]+$/.test(trimmed) && /^\d/.test(trimmed) ? trimmed : fallback;
+  return /^[\w.%-]+$/u.test(trimmed) && /^\d/u.test(trimmed) ? trimmed : fallback;
 }
 
 export function parseKeyList(raw: string): string[] {
