@@ -56,8 +56,18 @@ describe("buildViewModel", () => {
     expect(vm.sections[0].fields[0]).toEqual({
       key: "born",
       label: "Born",
-      value: { kind: "markdown", markdown: "1879-03-14" },
+      value: { kind: "date", iso: "1879-03-14" },
     });
+  });
+
+  it("applies custom label overrides case-insensitively, beating prettify", () => {
+    const vm = buildViewModel(
+      input({
+        frontmatter: { HP: 59, armor_class: 18 },
+        settings: { ...DEFAULT_SETTINGS, labelMap: { hp: "Hit Points", armor_class: "AC" } },
+      }),
+    );
+    expect(vm.sections[0].fields.map((f) => f.label)).toEqual(["Hit Points", "AC"]);
   });
 
   it("falls back to the filename when the title key is absent", () => {

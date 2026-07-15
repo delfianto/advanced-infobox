@@ -2,10 +2,15 @@ import { PluginSettingTab, Setting, type App } from "obsidian";
 import {
   DEFAULT_SETTINGS,
   parseKeyList,
+  parseLabelMap,
+  serializeLabelMap,
   type ArrayStyle,
+  type BooleanStyle,
+  type Density,
   type LivePreviewPresentation,
   type Placement,
   type TextAlign,
+  type VisualPreset,
 } from "src/settings/settings";
 import type AdvancedInfoboxPlugin from "src/main";
 
@@ -20,6 +25,8 @@ export class InfoboxSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    // ── Layout ─────────────────────────────────────────────────
 
     new Setting(containerEl)
       .setName("Placement")
@@ -81,6 +88,41 @@ export class InfoboxSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Density")
+      .setDesc("Vertical padding inside the box.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("compact", "Compact")
+          .addOption("normal", "Normal")
+          .addOption("comfortable", "Comfortable")
+          .setValue(this.plugin.settings.density)
+          .onChange(async (value) => {
+            this.plugin.settings.density = value as Density;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Visual preset")
+      .setDesc(
+        "Native follows your Obsidian theme; Wikipedia mimics the classic infobox look (light gray card, subtly rounded corners).",
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("native", "Obsidian native")
+          .addOption("wikipedia", "Wikipedia classic")
+          .setValue(this.plugin.settings.visualPreset)
+          .onChange(async (value) => {
+            this.plugin.settings.visualPreset = value as VisualPreset;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    // ── Field display ──────────────────────────────────────────
+
+    new Setting(containerEl).setName("Field display").setHeading();
+
+    new Setting(containerEl)
       .setName("Excluded properties")
       .setDesc("Comma-separated frontmatter keys that are never shown as fields.")
       .addText((text) =>
@@ -92,6 +134,22 @@ export class InfoboxSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName("Custom labels")
+      .setDesc(
+        "One `key: Label` per line (e.g. `hp: Hit Points`). Beats the automatic prettifying (eye_color → Eye Color).",
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("hp: Hit Points\narmor_class: AC")
+          .setValue(serializeLabelMap(this.plugin.settings.labelMap))
+          .onChange(async (value) => {
+            this.plugin.settings.labelMap = parseLabelMap(value);
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+      });
 
     new Setting(containerEl)
       .setName("Label alignment")
@@ -124,6 +182,35 @@ export class InfoboxSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Checkbox display")
+      .setDesc("How true/false properties are rendered.")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("check", "✓ / ✗")
+          .addOption("yes-no", "Yes / No")
+          .setValue(this.plugin.settings.booleanStyle)
+          .onChange(async (value) => {
+            this.plugin.settings.booleanStyle = value as BooleanStyle;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Date format")
+      .setDesc(
+        "Moment format for date properties (e.g. MMMM D, YYYY → March 14, 1879). Leave empty to show dates as written.",
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("MMMM D, YYYY")
+          .setValue(this.plugin.settings.dateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.dateFormat = value.trim();
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
       .setName("Show tags")
       .setDesc("Render the note's tags at the bottom of the infobox.")
       .addToggle((toggle) =>
@@ -132,6 +219,33 @@ export class InfoboxSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }),
       );
+
+    // ── Special keys ───────────────────────────────────────────
+
+    new Setting(containerEl).setName("Special keys").setHeading();
+    containerEl.createEl("p", {
+      cls: "setting-item-description",
+      text: "Which frontmatter properties feed the infobox header. Change these if your vault uses different names (e.g. cover instead of image).",
+    });
+
+    const specialKey = (
+      name: string,
+      key: "titleKey" | "subtitleKey" | "imageKey" | "captionKey",
+    ): void => {
+      new Setting(containerEl).setName(name).addText((text) =>
+        text
+          .setPlaceholder(DEFAULT_SETTINGS[key])
+          .setValue(this.plugin.settings[key])
+          .onChange(async (value) => {
+            this.plugin.settings[key] = value.trim() || DEFAULT_SETTINGS[key];
+            await this.plugin.saveSettings();
+          }),
+      );
+    };
+    specialKey("Title property", "titleKey");
+    specialKey("Subtitle property", "subtitleKey");
+    specialKey("Image property", "imageKey");
+    specialKey("Caption property", "captionKey");
 
     containerEl.createEl("p", {
       cls: "setting-item-description",

@@ -64,10 +64,24 @@ describe("classifyValue", () => {
     expect(classifyValue([null, ""])).toEqual({ kind: "empty" });
   });
 
-  it("formats Date instances as ISO dates", () => {
-    expect(classifyValue(new Date("1879-03-14T00:00:00Z"))).toEqual({
+  it("detects ISO date strings", () => {
+    expect(classifyValue("1879-03-14")).toEqual({ kind: "date", iso: "1879-03-14" });
+    expect(classifyValue("2024-01-01T10:30")).toEqual({ kind: "date", iso: "2024-01-01T10:30" });
+  });
+
+  it("does not mistake date-adjacent strings for dates", () => {
+    expect(classifyValue("25 ft.")).toEqual({ kind: "markdown", markdown: "25 ft." });
+    expect(classifyValue("1879-03")).toEqual({ kind: "markdown", markdown: "1879-03" });
+    expect(classifyValue("born 1879-03-14")).toEqual({
       kind: "markdown",
-      markdown: "1879-03-14",
+      markdown: "born 1879-03-14",
+    });
+  });
+
+  it("converts Date instances to date values", () => {
+    expect(classifyValue(new Date("1879-03-14T00:00:00Z"))).toEqual({
+      kind: "date",
+      iso: "1879-03-14",
     });
   });
 

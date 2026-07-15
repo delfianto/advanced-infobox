@@ -2,6 +2,9 @@ export type Placement = "right" | "left" | "full";
 export type LivePreviewPresentation = "full-width" | "aligned";
 export type ArrayStyle = "list" | "comma" | "chips";
 export type TextAlign = "left" | "center" | "right";
+export type BooleanStyle = "check" | "yes-no";
+export type Density = "compact" | "normal" | "comfortable";
+export type VisualPreset = "native" | "wikipedia";
 
 export interface InfoboxSettings {
   placement: Placement;
@@ -15,6 +18,13 @@ export interface InfoboxSettings {
   arrayStyle: ArrayStyle;
   /** Alignment of the property-label column (Race, Class, …). */
   labelAlign: TextAlign;
+  /** Custom key → display label overrides (beats auto-prettifying). */
+  labelMap: Record<string, string>;
+  booleanStyle: BooleanStyle;
+  /** Moment format for date-like values; empty = show as written. */
+  dateFormat: string;
+  density: Density;
+  visualPreset: VisualPreset;
   showTags: boolean;
   titleKey: string;
   subtitleKey: string;
@@ -30,6 +40,11 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   excludeKeys: ["tags", "aliases", "cssclasses", "infobox", "position"],
   arrayStyle: "list",
   labelAlign: "left",
+  labelMap: {},
+  booleanStyle: "check",
+  dateFormat: "",
+  density: "normal",
+  visualPreset: "native",
   showTags: true,
   titleKey: "title",
   subtitleKey: "subtitle",
@@ -58,4 +73,30 @@ export function parseKeyList(raw: string): string[] {
     .split(",")
     .map((k) => k.trim())
     .filter(Boolean);
+}
+
+/**
+ * One `key: Label` pair per line, e.g.
+ *
+ *   hp: Hit Points
+ *   armor_class: AC
+ *
+ * Lines without a colon (or with an empty side) are ignored.
+ */
+export function parseLabelMap(raw: string): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const line of raw.split("\n")) {
+    const colonIdx = line.indexOf(":");
+    if (colonIdx === -1) continue;
+    const key = line.slice(0, colonIdx).trim();
+    const label = line.slice(colonIdx + 1).trim();
+    if (key && label) map[key] = label;
+  }
+  return map;
+}
+
+export function serializeLabelMap(map: Record<string, string>): string {
+  return Object.entries(map)
+    .map(([key, label]) => `${key}: ${label}`)
+    .join("\n");
 }

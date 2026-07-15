@@ -8,15 +8,21 @@ export type FieldValue =
   | { kind: "markdown"; markdown: string }
   | { kind: "number"; value: number }
   | { kind: "boolean"; value: boolean }
+  | { kind: "date"; iso: string }
   | { kind: "list"; items: FieldValue[] }
   | { kind: "empty" };
+
+/** Obsidian date/datetime property values arrive as ISO-shaped strings. */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/;
 
 export function classifyValue(raw: unknown): FieldValue {
   if (raw === null || raw === undefined) return { kind: "empty" };
 
   if (typeof raw === "string") {
     const trimmed = raw.trim();
-    return trimmed === "" ? { kind: "empty" } : { kind: "markdown", markdown: trimmed };
+    if (trimmed === "") return { kind: "empty" };
+    if (ISO_DATE.test(trimmed)) return { kind: "date", iso: trimmed };
+    return { kind: "markdown", markdown: trimmed };
   }
   if (typeof raw === "number") return { kind: "number", value: raw };
   if (typeof raw === "boolean") return { kind: "boolean", value: raw };
@@ -27,7 +33,7 @@ export function classifyValue(raw: unknown): FieldValue {
   }
 
   if (raw instanceof Date) {
-    return { kind: "markdown", markdown: raw.toISOString().slice(0, 10) };
+    return { kind: "date", iso: raw.toISOString().slice(0, 10) };
   }
 
   // Nested objects are exactly what this plugin exists to avoid; render them

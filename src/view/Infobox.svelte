@@ -20,7 +20,13 @@
   {:else if value.kind === "number"}
     <span class="aib-number">{value.value.toLocaleString()}</span>
   {:else if value.kind === "boolean"}
-    <span class="aib-bool" class:aib-bool-true={value.value}>{value.value ? "✓" : "✗"}</span>
+    {#if model.booleanStyle === "yes-no"}
+      <span class="aib-bool-text">{value.value ? "Yes" : "No"}</span>
+    {:else}
+      <span class="aib-bool" class:aib-bool-true={value.value}>{value.value ? "✓" : "✗"}</span>
+    {/if}
+  {:else if value.kind === "date"}
+    <span class="aib-date">{ctx.formatDate(value.iso)}</span>
   {:else if value.kind === "list"}
     {#if value.items.length === 1}
       <!-- A lone bullet reads as clutter; render the single item plain. -->

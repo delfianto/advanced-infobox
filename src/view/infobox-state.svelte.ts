@@ -1,5 +1,5 @@
 import type { InfoboxViewModel } from "src/model/schema";
-import type { ArrayStyle } from "src/settings/settings";
+import type { ArrayStyle, BooleanStyle } from "src/settings/settings";
 
 /**
  * Reactive bridge between the imperative render child and the Svelte
@@ -11,6 +11,7 @@ export class InfoboxModel {
   /** Problems from the anchor block's options, shown inline. */
   errors = $state<string[]>([]);
   arrayStyle = $state<ArrayStyle>("list");
+  booleanStyle = $state<BooleanStyle>("check");
 }
 
 /**
@@ -22,4 +23,6 @@ export interface RenderContext {
   renderMarkdown: (markdown: string, el: HTMLElement) => void;
   /** Raw image spec (wikilink / vault path / URL) → resource URL, or null. */
   resolveImage: (raw: string) => string | null;
+  /** ISO date string → user-formatted date (settings.dateFormat). */
+  formatDate: (iso: string) => string;
 }
