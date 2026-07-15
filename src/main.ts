@@ -1,6 +1,17 @@
 import "src/styles.css";
-import { debounce, type Editor, normalizePath, Notice, Plugin, type TFile } from "obsidian";
+import { autoEmbedExtension, autoEmbedRefresh } from "src/view/auto-embed-live";
+import {
+  debounce,
+  type Editor,
+  MarkdownView,
+  normalizePath,
+  Notice,
+  Plugin,
+  type TFile,
+} from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
+import { autoEmbedReadingProcessor } from "src/view/auto-embed-reading";
+import { type EditorView } from "@codemirror/view";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
 import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
@@ -46,6 +57,12 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       ctx.addChild(new InfoboxRenderChild(el, this, source, ctx.sourcePath));
     });
 
+    // Auto-embed (opt-in): render the box with no anchor block. Reading view
+    // goes through a post-processor; Live Preview through the editor extension.
+    // Both defer to an explicit block and to `infobox: false`.
+    this.registerMarkdownPostProcessor(autoEmbedReadingProcessor(this));
+    this.registerEditorExtension(autoEmbedExtension(this));
+
     this.addCommand({
       id: "insert-infobox",
       name: "Insert infobox",
@@ -90,6 +107,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
           this.templates.invalidate(file.path);
           this.refreshAllSoon();
         }
+        if (this.settings.autoEmbed) this.refreshAutoEmbedFor(file.path);
       }),
     );
     this.registerEvent(
@@ -176,6 +194,43 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
   refreshAll(): void {
     for (const child of this.children) child.refresh();
+  }
+
+  /**
+   * Toggling auto-embed on/off can't be handled by refreshAll (which only
+   * updates already-mounted boxes) — a box may need to appear or vanish.
+   * Re-run the reading-view post-processor by rerendering open previews; Live
+   * Preview editors reconcile through the auto-embed editor extension.
+   */
+  reloadAutoEmbed(): void {
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      const { view } = leaf;
+      if (!(view instanceof MarkdownView)) return;
+      if (view.getMode() === "preview") {
+        view.previewMode.rerender(true);
+      } else {
+        // Live Preview: ask the auto-embed extension to reconcile its widget.
+        const cm = (view.editor as unknown as { cm?: EditorView } | undefined)?.cm;
+        cm?.dispatch({ effects: autoEmbedRefresh.of(null) });
+      }
+    });
+  }
+
+  /**
+   * Frontmatter reaches metadataCache a beat after the doc changes, so a Live
+   * Preview box would otherwise appear/disappear one edit late when the trigger
+   * property (`infobox:`) is added, removed, or flipped — with no self-heal.
+   * Nudge that file's editors once the cache settles so the widget reconciles.
+   * (The box's *content* already refreshes via the child's own cache listener;
+   * this is only about whether the box should exist at all.)
+   */
+  private refreshAutoEmbedFor(path: string): void {
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      const { view } = leaf;
+      if (!(view instanceof MarkdownView) || view.file?.path !== path) return;
+      const cm = (view.editor as unknown as { cm?: EditorView } | undefined)?.cm;
+      cm?.dispatch({ effects: autoEmbedRefresh.of(null) });
+    });
   }
 
   private insertWithTemplate(editor: Editor): void {
