@@ -1,6 +1,15 @@
 import "src/styles.css";
-import { debounce, type Editor, normalizePath, Notice, Plugin, type TFile } from "obsidian";
+import {
+  debounce,
+  type Editor,
+  normalizePath,
+  Notice,
+  Plugin,
+  stringifyYaml,
+  TFile,
+} from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
+import { buildBaseConfig } from "src/model/base-config";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
 import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
@@ -84,6 +93,17 @@ export default class AdvancedInfoboxPlugin extends Plugin {
         const file = this.app.workspace.getActiveFile();
         if (!file) return false;
         if (!checking) void this.addTemplateProperties(file);
+        return true;
+      },
+    });
+
+    this.addCommand({
+      id: "create-base-from-folder",
+      name: "Create base from folder",
+      checkCallback: (checking) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file) return false;
+        if (!checking) void this.createBaseFromFolder(file);
         return true;
       },
     });
@@ -243,6 +263,81 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       created > 0
         ? `Created ${created} sample template${created === 1 ? "" : "s"} in ${folder}/.`
         : `All sample templates already exist in ${folder}/.`,
+    );
+  }
+
+  /**
+   * Generates an Obsidian Base (.base) from the active note's folder: detects
+   * the dominant template among the folder's notes, projects it onto a table
+   * view (traditional list) and a cards view, and writes the file. Presentation
+   * only — it reads frontmatter, never writes to the notes. See §8.1.
+   */
+  private async createBaseFromFolder(active: TFile): Promise<void> {
+    const { parent } = active;
+    const folder = parent && !parent.isRoot() ? parent.path : "";
+    const prefix = folder ? `${folder}/` : "";
+    const notes = this.app.vault
+      .getMarkdownFiles()
+      .filter((f) => (folder ? f.path.startsWith(prefix) : true));
+
+    const special = new Set(
+      [
+        this.settings.titleKey,
+        this.settings.subtitleKey,
+        this.settings.imageKey,
+        this.settings.captionKey,
+        this.settings.templateKey,
+        "tags",
+        ...this.settings.excludeKeys,
+      ].map((k) => k.toLowerCase()),
+    );
+
+    // Tally the template each note names; pick the most common as the shape.
+    const tally = new Map<string, number>();
+    const seen = new Set<string>();
+    let hasImages = false;
+    for (const note of notes) {
+      const fm = this.app.metadataCache.getFileCache(note)?.frontmatter as
+        | Record<string, unknown>
+        | undefined;
+      if (!fm) continue;
+      const id = fm[this.settings.templateKey];
+      if (typeof id === "string" && id.trim()) {
+        tally.set(id.trim(), (tally.get(id.trim()) ?? 0) + 1);
+      }
+      const image = fm[this.settings.imageKey];
+      if (typeof image === "string" && image.trim() !== "") hasImages = true;
+      for (const key of Object.keys(fm)) if (!special.has(key.toLowerCase())) seen.add(key);
+    }
+    const templateId = [...tally].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const template = templateId ? await this.templates.resolve(templateId) : null;
+
+    const config = buildBaseConfig({
+      folder,
+      template,
+      templateKey: this.settings.templateKey,
+      templateId,
+      titleKey: this.settings.titleKey,
+      imageKey: this.settings.imageKey,
+      hasImages,
+      fallbackKeys: [...seen],
+    });
+
+    const baseName = folder ? folder.slice(folder.lastIndexOf("/") + 1) : "Infobox";
+    const path = `${prefix}${baseName}.base`;
+    const existing = this.app.vault.getAbstractFileByPath(path);
+    if (existing) {
+      new Notice(`A base already exists at ${path}. Opening it.`);
+      if (existing instanceof TFile) await this.app.workspace.getLeaf(false).openFile(existing);
+      return;
+    }
+
+    const created = await this.app.vault.create(path, stringifyYaml(config));
+    await this.app.workspace.getLeaf(false).openFile(created);
+    new Notice(
+      templateId
+        ? `Created ${path} from template “${templateId}”.`
+        : `Created ${path} from ${notes.length} note${notes.length === 1 ? "" : "s"}.`,
     );
   }
 
