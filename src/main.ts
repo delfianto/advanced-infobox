@@ -1,6 +1,6 @@
 import "src/styles.css";
+import { debounce, type Editor, normalizePath, Notice, Plugin, type TFile } from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
-import { type Editor, Notice, Plugin, type TFile } from "obsidian";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
 import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
@@ -12,6 +12,12 @@ import { TemplateRegistry } from "src/model/template-registry";
 // injected constants defensively — a missing define must never crash onload.
 const BUILD_TIME = typeof __BUILD_TIME__ === "undefined" ? "unknown" : __BUILD_TIME__;
 const DEV_BUILD = typeof __DEV_BUILD__ === "undefined" ? false : __DEV_BUILD__;
+
+/** Upper bound on remembered collapse entries (oldest evicted first). */
+const COLLAPSE_CAP = 300;
+
+/** data.json shape: settings plus optionally-persisted collapse state. */
+type StoredData = Partial<InfoboxSettings> & { lpCollapseState?: Record<string, boolean> };
 
 export default class AdvancedInfoboxPlugin extends Plugin {
   override settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
@@ -25,6 +31,10 @@ export default class AdvancedInfoboxPlugin extends Plugin {
    * its default on every remount.
    */
   private readonly lpCollapseState = new Map<string, boolean>();
+  /** Collapse toggles arrive per click; batch the disk writes. */
+  private readonly persistCollapseSoon = debounce(() => void this.persistAll(), 1000, true);
+  /** Template edits refresh every open infobox; collapse bursts. */
+  private readonly refreshAllSoon = debounce(() => this.refreshAll(), 150, true);
 
   override async onload(): Promise<void> {
     // Proves which build Obsidian actually loaded; the toast is dev-only.
@@ -51,6 +61,12 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: "insert-infobox-skeleton",
+      name: "Insert infobox with sections skeleton",
+      editorCallback: (editor) => this.insertSkeleton(editor),
+    });
+
+    this.addCommand({
       id: "create-sample-templates",
       name: "Create sample infobox templates",
       callback: () => void this.createSampleTemplates(),
@@ -72,15 +88,21 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       this.app.metadataCache.on("changed", (file) => {
         if (this.templates.contains(file.path)) {
           this.templates.invalidate(file.path);
-          this.refreshAll();
+          this.refreshAllSoon();
         }
       }),
     );
     this.registerEvent(
       this.app.vault.on("rename", (file, oldPath) => {
+        // The template folder itself moved: follow it instead of degrading.
+        if (normalizePath(oldPath) === this.templates.folder()) {
+          this.settings.templateFolder = file.path;
+          void this.saveSettings();
+          return;
+        }
         if (this.templates.contains(file.path) || this.templates.contains(oldPath)) {
           this.templates.invalidate();
-          this.refreshAll();
+          this.refreshAllSoon();
         }
       }),
     );
@@ -88,7 +110,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       this.app.vault.on("delete", (file) => {
         if (this.templates.contains(file.path)) {
           this.templates.invalidate();
-          this.refreshAll();
+          this.refreshAllSoon();
         }
       }),
     );
@@ -112,7 +134,14 @@ export default class AdvancedInfoboxPlugin extends Plugin {
   }
 
   rememberCollapsed(sourcePath: string, collapsed: boolean): void {
+    this.lpCollapseState.delete(sourcePath);
     this.lpCollapseState.set(sourcePath, collapsed);
+    while (this.lpCollapseState.size > COLLAPSE_CAP) {
+      const oldest = this.lpCollapseState.keys().next().value;
+      if (oldest === undefined) break;
+      this.lpCollapseState.delete(oldest);
+    }
+    if (this.settings.lpCollapseRemember) this.persistCollapseSoon();
   }
 
   detach(child: InfoboxRenderChild): void {
@@ -120,12 +149,26 @@ export default class AdvancedInfoboxPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    const stored = ((await this.loadData()) ?? {}) as Partial<InfoboxSettings>;
-    this.settings = { ...DEFAULT_SETTINGS, ...stored };
+    const stored = ((await this.loadData()) ?? {}) as StoredData;
+    const { lpCollapseState, ...rest } = stored;
+    this.settings = { ...DEFAULT_SETTINGS, ...rest };
+    if (this.settings.lpCollapseRemember && lpCollapseState) {
+      for (const [path, collapsed] of Object.entries(lpCollapseState)) {
+        this.lpCollapseState.set(path, collapsed);
+      }
+    }
+  }
+
+  private async persistAll(): Promise<void> {
+    const data: StoredData = { ...this.settings };
+    if (this.settings.lpCollapseRemember && this.lpCollapseState.size > 0) {
+      data.lpCollapseState = Object.fromEntries(this.lpCollapseState);
+    }
+    await this.saveData(data);
   }
 
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+    await this.persistAll();
     this.applySettingsCss();
     this.templates.invalidate();
     this.refreshAll();
@@ -147,6 +190,30 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     new TemplatePickerModal(this.app, ids, (id) => {
       editor.replaceSelection(`\`\`\`infobox\ntemplate: ${id}\n\`\`\`\n`);
     }).open();
+  }
+
+  /** Seeds a sections scaffold from the active note's own properties. */
+  private insertSkeleton(editor: Editor): void {
+    const file = this.app.workspace.getActiveFile();
+    const frontmatter = file
+      ? (this.app.metadataCache.getFileCache(file)?.frontmatter as
+          | Record<string, unknown>
+          | undefined)
+      : undefined;
+    const hidden = new Set(
+      [
+        this.settings.titleKey,
+        this.settings.subtitleKey,
+        this.settings.imageKey,
+        this.settings.captionKey,
+        this.settings.templateKey,
+        "tags",
+        ...this.settings.excludeKeys,
+      ].map((k) => k.toLowerCase()),
+    );
+    const keys = Object.keys(frontmatter ?? {}).filter((k) => !hidden.has(k.toLowerCase()));
+    const body = keys.length > 0 ? `sections:\n  Info: [${keys.join(", ")}]\n` : "";
+    editor.replaceSelection(`\`\`\`infobox\n${body}\`\`\`\n`);
   }
 
   private async createSampleTemplates(): Promise<void> {

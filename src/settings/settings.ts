@@ -15,6 +15,8 @@ export interface InfoboxSettings {
    * expanded/collapsed. Reading view always renders expanded.
    */
   lpCollapse: LpCollapse;
+  /** Persist per-note collapse toggles across restarts (session-only when off). */
+  lpCollapseRemember: boolean;
   /** CSS length, e.g. "22em" */
   width: string;
   /** CSS length, e.g. "0.9em" */
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   placement: "right",
   livePreview: "full-width",
   lpCollapse: "off",
+  lpCollapseRemember: false,
   width: "22em",
   fontSize: "0.9em",
   excludeKeys: ["tags", "aliases", "cssclasses", "infobox", "position"],

@@ -75,22 +75,24 @@ edit-state easy; the hard parts:
 
 ## 5. Smaller pending items
 
-- **Collapse persistence option**: LP collapse state is session-only by
-  design; optional "remember across restarts" toggle would persist the map
-  in `data.json` (trim on vault close; cap size).
-- **Chevron/collapse vars in @settings**: `--aib-chevron` styling isn't
-  exposed; audit newer CSS additions against the Style Settings manifest.
-- **Template folder rename**: currently degrades gracefully; could follow
-  renames automatically via `vault.on("rename")` when oldPath === setting.
+- ~~Collapse persistence option~~ *(shipped 2026-07-15)*: "Remember collapse
+  state" toggle persists the per-note map in `data.json` (300-entry cap,
+  oldest evicted, disk writes debounced 1s).
+- ~~Manifest audit~~ *(shipped 2026-07-15)*: `--aib-border-width`,
+  `--aib-image-radius`, `--aib-section-weight` added to the Style Settings
+  manifest. Chevron color intentionally rides `--aib-muted-color`.
+- ~~Template folder rename~~ *(shipped 2026-07-15)*: renaming the template
+  folder now re-points the setting automatically.
+- ~~Insert command variants~~ *(shipped 2026-07-15)*: "Insert infobox with
+  sections skeleton" seeds a `sections:` scaffold from the active note's
+  own properties.
+- ~~`refreshAll` debounce~~ *(shipped 2026-07-15)*: template-driven
+  refreshes are debounced 150ms; settings changes stay immediate.
 - **Per-key format hints** (open question from PLAN.md §6): date patterns or
   units per key. A `key: "Label | date:YYYY"` mini-syntax reintroduces DSL
   brittleness — if ever done, prefer a reserved template-frontmatter block
   key like `formats` parsed as flat `key: token` pairs. Decide only after
   real-world need.
-- **Insert command variants**: "Insert infobox with sections skeleton"
-  generated from the current note's frontmatter keys.
-- **`refreshAll` debounce**: template edits refresh every open infobox per
-  keystroke of the template note; a ~150ms debounce would cut churn.
 - **Mobile verification**: `isDesktopOnly: false` but untested on mobile
   WebView (ResizeObserver, floats, collapse tap targets).
 - **PDF export spot-check**: Reading-view float is believed to print
