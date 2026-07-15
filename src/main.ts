@@ -9,6 +9,7 @@ import {
   TFile,
 } from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
+import { BasesHoverPreview } from "src/view/bases-hover";
 import { buildBaseConfig } from "src/model/base-config";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
@@ -31,6 +32,7 @@ type StoredData = Partial<InfoboxSettings> & { lpCollapseState?: Record<string, 
 export default class AdvancedInfoboxPlugin extends Plugin {
   override settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
   readonly templates = new TemplateRegistry(this.app, () => this.settings.templateFolder);
+  private readonly basesHover = new BasesHoverPreview(this);
 
   private readonly children = new Set<InfoboxRenderChild>();
   private styleEl: HTMLStyleElement | null = null;
@@ -142,9 +144,11 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
     this.addSettingTab(new InfoboxSettingTab(this.app, this));
     this.applySettingsCss();
+    this.basesHover.register();
   }
 
   override onunload(): void {
+    this.basesHover.destroy();
     this.styleEl?.remove();
     this.styleEl = null;
   }

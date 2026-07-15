@@ -48,6 +48,12 @@ export interface InfoboxSettings {
   templateKey: string;
   /** Vault folder holding template notes; basename = template id. */
   templateFolder: string;
+  /**
+   * Show a note's infobox in a floating popover when hovering a link to it
+   * inside an Obsidian Base (e.g. a table's file-name column). Best-effort —
+   * reads Bases' rendered DOM.
+   */
+  basesHoverPreview: boolean;
 }
 
 export const DEFAULT_SETTINGS: InfoboxSettings = {
@@ -73,6 +79,7 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   captionKey: "caption",
   templateKey: "infobox",
   templateFolder: "Templates/Infobox",
+  basesHoverPreview: true,
 };
 
 export const PLACEMENTS: readonly Placement[] = ["right", "left", "full"];

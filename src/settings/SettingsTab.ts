@@ -293,6 +293,31 @@ export class InfoboxSettingTab extends PluginSettingTab {
         }),
       );
 
+    // ── Bases ──────────────────────────────────────────────────
+
+    new Setting(containerEl).setName("Bases").setHeading();
+    containerEl.createEl("p", {
+      cls: "setting-item-description",
+      text:
+        "Run “Create base from folder” from the command palette to generate an Obsidian " +
+        "Base (a table view and a cards view) from the notes in the active note's folder, " +
+        "using their detected template.",
+    });
+
+    new Setting(containerEl)
+      .setName("Infobox on hover in Bases")
+      .setDesc(
+        "Inside an Obsidian Base, show a note's infobox in a popover when you hover a link " +
+          "to it — e.g. the file-name column of a table view. Best-effort: it reads the " +
+          "Base's rendered markup, so it does nothing if Bases isn't available.",
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.basesHoverPreview).onChange(async (value) => {
+          this.plugin.settings.basesHoverPreview = value;
+          await this.plugin.saveSettings();
+        }),
+      );
+
     // ── Templates ──────────────────────────────────────────────
 
     new Setting(containerEl).setName("Templates").setHeading();
