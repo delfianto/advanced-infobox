@@ -178,10 +178,20 @@ Deliberately out of scope (not editable):
   brittleness — if ever done, prefer a reserved template-frontmatter block
   key like `formats` parsed as flat `key: token` pairs. Decide only after
   real-world need.
-- **Mobile verification**: `isDesktopOnly: false` but untested on mobile
-  WebView (ResizeObserver, floats, collapse tap targets).
-- **PDF export spot-check**: Reading-view float is believed to print
-  correctly; verify once.
+- **Mobile verification** *(audited + hardened 2026-07-15; on-device check still
+  pending)*: static audit done. Added a `@media (max-width: 500px)` float
+  backstop (full-width box on phones even if the ResizeObserver never fires) and
+  `@media (pointer: coarse)` roomier tap targets for the inline-edit controls
+  (bool toggle, list ×/＋Add, inputs); `ResizeObserver` was already guarded, and
+  number/date fields use native mobile pickers. Can't drive mobile Obsidian over
+  CDP, so real on-device verification (touch, WebView quirks) is still manual.
+- **PDF export spot-check** *(on-screen verified 2026-07-15; artifact check
+  manual)*: confirmed the reading-view float renders correctly (box floats right,
+  prose wraps to its left) and the float CSS is not `@media`-gated, so it applies
+  in Obsidian's PDF export (which renders the reading-view DOM). Couldn't produce
+  a real exported PDF automatically — `Page.printToPDF` is blocked on the Electron
+  remote-debug socket — so eyeballing the paginated PDF once via File → Export to
+  PDF remains a manual step.
 
 ## 6. Testing gaps
 

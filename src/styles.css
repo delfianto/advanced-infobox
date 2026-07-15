@@ -615,3 +615,35 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
   --aib-section-color: #eaecf0;
   --aib-chip-bg: #3a3d41;
 }
+
+/* ── Mobile / touch ────────────────────────────────────────── */
+
+/* Backstop for the ResizeObserver float-collapse: on a narrow *viewport*
+   (phones, tiny windows) drop the float to full width even if the observer
+   never fires (older mobile WebViews). Desktop split panes still rely on the
+   observer's .aib-narrow, since a media query can't measure a single pane. */
+@media (max-width: 500px) {
+  .markdown-preview-view .aib-container.aib-right,
+  .markdown-preview-view .aib-container.aib-left,
+  .markdown-source-view .aib-container.aib-lp-aligned.aib-right,
+  .markdown-source-view .aib-container.aib-lp-aligned.aib-left {
+    float: none;
+    clear: both;
+    width: 100%;
+    margin: 0 0 1em 0;
+  }
+}
+
+/* Coarse pointers (touch): the inline-edit controls are deliberately compact on
+   desktop; give them roomier tap targets on touch without bloating mouse UI. */
+@media (pointer: coarse) {
+  .aib-edit-bool,
+  .aib-list-edit-remove,
+  .aib-list-edit-add {
+    padding: 0.5em 0.7em;
+  }
+
+  input.aib-edit {
+    padding-block: 0.4em;
+  }
+}
