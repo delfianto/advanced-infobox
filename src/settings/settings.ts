@@ -9,6 +9,14 @@ export type VisualPreset = "native" | "wikipedia";
 
 export interface InfoboxSettings {
   placement: Placement;
+  /**
+   * Auto-embed: render an infobox at the top of a note that carries the
+   * template property (see `templateKey`, e.g. `infobox: person` or
+   * `infobox: true`) — no ```infobox``` block needed. Opt-in; a note opts
+   * out per-file with a falsy trigger (`infobox: false`). A note that has an
+   * explicit anchor block is left to the block, never double-rendered.
+   */
+  autoEmbed: boolean;
   livePreview: LivePreviewPresentation;
   /**
    * Collapsible card in Live Preview: off, or collapsible starting
@@ -46,6 +54,7 @@ export interface InfoboxSettings {
 
 export const DEFAULT_SETTINGS: InfoboxSettings = {
   placement: "right",
+  autoEmbed: false,
   livePreview: "full-width",
   lpCollapse: "off",
   lpCollapseRemember: false,

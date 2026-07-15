@@ -1,7 +1,7 @@
 {
   "name": "advanced-infobox",
   "version": "0.1.1",
-  "description": "Wiki-style infoboxes for Obsidian (https://obsidian.md) rendered from plain, flat frontmatter \u2014 your properties stay the single source of truth.",
+  "description": "Wiki-style infoboxes for Obsidian (https://obsidian.md) rendered from plain, flat frontmatter — your properties stay the single source of truth.",
   "keywords": [],
   "license": "MIT",
   "author": "Dwi Elfianto",
@@ -19,11 +19,14 @@
     "test:coverage": "vp test run --coverage"
   },
   "devDependencies": {
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@types/node": "^26.1.1",
     "@voidzero-dev/vite-plus-core": "^0.2.4",
     "builtin-modules": "^5.3.0",
     "obsidian": "^1.13.1",
+    "playwright-core": "^1.61.1",
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.2",
     "tslib": "^2.8.1",

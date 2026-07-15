@@ -15,26 +15,65 @@ cold in a future session.
 
 ---
 
-## 1. Auto-embed mode (infobox without an anchor block)
+## 1. Auto-embed mode (infobox without an anchor block) — *shipped 2026-07-15, verified in Obsidian 1.12.7*
 
-Render the infobox automatically at the top of qualifying notes, no
-` ```infobox ` block needed. Behind a global toggle (default off), because the
-anchor block already works reliably in both modes.
+Renders the infobox at the top of qualifying notes, no ` ```infobox ` block
+needed. Behind the global **Auto-embed** toggle (default off). Verified end to
+end by driving a real Obsidian over its remote-debugging port (CDP): reading
+float + wrap, LP card under Properties, template resolution, per-note opt-out,
+and the double-render guard all confirmed with screenshots + DOM assertions.
 
-- **Reading view**: `registerMarkdownPostProcessor` — detect the first
-  rendered section of a note (ctx.frontmatter available), prepend a container,
-  mount the same `InfoboxRenderChild`. Guard against double-render when the
-  note *also* has an anchor block (skip auto if a processor already ran for
-  this sourcePath — track per-path in the plugin).
-- **Live Preview**: CM6 `ViewPlugin` adding a block widget decoration below
-  the frontmatter/properties widget. This is the fiddly half: decoration must
-  survive re-layout, coordinate with `fold-properties-by-default` (installed
-  in the user's vault) and banners-reloaded, and never steal cursor focus.
-- **Qualifying notes**: setting for "auto-embed when note has `infobox`
-  property" (safest trigger) vs "any note with frontmatter" (noisy) vs
-  folder allowlist.
-- **Risk**: this is exactly the leaf-injection territory Omni got wrong;
-  keep it strictly opt-in and lean on the existing render child.
+Scope chosen this session:
+- **Trigger** (single mode, not the three surveyed): the note carries the
+  template property (`templateKey`, `infobox` by default) set truthy —
+  `infobox: person` (also selects that template) or `infobox: true`.
+  `infobox: false`/`no`/`off`/empty is a per-note opt-out. Reuses the one
+  property that already names a template, so there's a single knob.
+- **Both view modes.** A note with an explicit anchor block is never
+  double-rendered: both paths scan the source for an ` ```infobox ` fence and
+  step aside.
+
+Architecture (for cold resume):
+- `src/model/auto-embed.ts` — pure gates `isAutoEmbedTrigger`,
+  `qualifiesForAutoEmbed`, `hasInfoboxAnchor` + the shared `AUTO_EMBED_CLASS`
+  (unit-tested).
+- **Reading view** `src/view/auto-embed-reading.ts`: a
+  `registerMarkdownPostProcessor` injecting one `.aib-auto-embed` container
+  into `.markdown-preview-sizer` (after the inline title), once per render
+  (self-healing marker element, no docId tracking). Skips embeds/popovers and
+  Live Preview (no sizer). Mounts the ordinary `InfoboxRenderChild`, empty source.
+- **Live Preview** `src/view/auto-embed-live.ts` (a **`StateField<DecorationSet>`**)
+  + `src/view/InfoboxWidget.ts` (block widget) + `src/view/frontmatter-boundary.ts`
+  (`bodyStart`, unit-tested). Widget sits below the Properties widget, is `eq`
+  by note path (no per-keystroke remount), `ignoreEvent`s to keep the caret out,
+  keys its child by DOM element (WeakMap) so CM's instance-swap on an `eq` match
+  can't leak the child, and gates on `editorLivePreviewField` (no widget in raw
+  Source mode). File comes from `editorInfoField` (no view/leaf lookup).
+- Toggling reflects immediately via `plugin.reloadAutoEmbed()`; frontmatter
+  edits reach the LP widget via `refreshAutoEmbedFor` on `metadataCache`
+  "changed" (both dispatch an `autoEmbedRefresh` StateEffect).
+- `@codemirror/state` / `@codemirror/view` added as devDeps (typings only;
+  already in the build's `external` list).
+
+Two non-obvious runtime bugs caught only by driving real Obsidian (both fixed):
+1. **Block decorations may not come from a `ViewPlugin`** ("Block decorations
+   may not be specified via plugins"). Because a MarkdownView always builds its
+   editor sub-view, the throw during `setViewData` broke the *entire* note load
+   for any qualifying note. Fix: deliver via a `StateField` (which is allowed).
+2. **Reading-view post-processor runs on detached section elements** (and
+   throwaway copies), so `el.closest(sizer)` is null at call time and injection
+   silently never fires. Fix: poll briefly (up to ~1s) and inject the moment the
+   element attaches; give up on copies that never do.
+
+Remaining / known limitations:
+- In reading mode the (hidden) editor sub-view also mounts its LP widget — one
+  extra off-screen render per qualifying note. Harmless and mirrors how the
+  anchor block renders in both sub-views; not worth special-casing.
+- LP anchor scan is `doc.toString()` per doc-change — fine for normal notes,
+  revisit only if huge-note typing lags.
+- Coexistence with `fold-properties-by-default` / `banners-reloaded` around the
+  frontmatter is untested (the user's real vault has these; the isolated test
+  vault does not).
 
 ## 2. Block-option editor suggestion
 
