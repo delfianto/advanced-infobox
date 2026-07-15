@@ -67,7 +67,7 @@ export class InfoboxSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOption("full-width", "Full width")
-          .addOption("aligned", "Placement side")
+          .addOption("aligned", "Follow placement")
           .setValue(this.plugin.settings.livePreview)
           .onChange(async (value) => {
             this.plugin.settings.livePreview = value as LivePreviewPresentation;
@@ -102,33 +102,43 @@ export class InfoboxSettingTab extends PluginSettingTab {
         }),
       );
 
-    new Setting(containerEl)
+    const widthSetting = new Setting(containerEl)
       .setName("Width")
-      .setDesc("Infobox width, in em. Capped on narrow panes.")
-      .addSlider((slider) =>
-        slider
-          .setLimits(14, 40, 1)
-          .setValue(emValue(this.plugin.settings.width, DEFAULT_SETTINGS.width))
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.width = `${value}em`;
-            await this.plugin.saveSettings();
-          }),
-      );
+      .setDesc("Infobox width, in em. Capped on narrow panes.");
+    const widthValue = widthSetting.controlEl.createSpan({
+      cls: "aib-slider-value",
+      text: this.plugin.settings.width,
+    });
+    widthSetting.addSlider((slider) =>
+      slider
+        .setLimits(14, 40, 1)
+        .setValue(emValue(this.plugin.settings.width, DEFAULT_SETTINGS.width))
+        .setDynamicTooltip()
+        .onChange(async (value) => {
+          this.plugin.settings.width = `${value}em`;
+          widthValue.setText(this.plugin.settings.width);
+          await this.plugin.saveSettings();
+        }),
+    );
 
-    new Setting(containerEl)
+    const fontSetting = new Setting(containerEl)
       .setName("Font size")
-      .setDesc("Infobox text size relative to the note, in em.")
-      .addSlider((slider) =>
-        slider
-          .setLimits(0.7, 1.4, 0.05)
-          .setValue(emValue(this.plugin.settings.fontSize, DEFAULT_SETTINGS.fontSize))
-          .setDynamicTooltip()
-          .onChange(async (value) => {
-            this.plugin.settings.fontSize = `${Number(value.toFixed(2))}em`;
-            await this.plugin.saveSettings();
-          }),
-      );
+      .setDesc("Infobox text size relative to the note, in em.");
+    const fontValue = fontSetting.controlEl.createSpan({
+      cls: "aib-slider-value",
+      text: this.plugin.settings.fontSize,
+    });
+    fontSetting.addSlider((slider) =>
+      slider
+        .setLimits(0.7, 1.4, 0.05)
+        .setValue(emValue(this.plugin.settings.fontSize, DEFAULT_SETTINGS.fontSize))
+        .setDynamicTooltip()
+        .onChange(async (value) => {
+          this.plugin.settings.fontSize = `${Number(value.toFixed(2))}em`;
+          fontValue.setText(this.plugin.settings.fontSize);
+          await this.plugin.saveSettings();
+        }),
+    );
 
     new Setting(containerEl)
       .setName("Density")
@@ -357,5 +367,31 @@ export class InfoboxSettingTab extends PluginSettingTab {
         "(placement, exclude, image, caption, sections, unlisted). Data always comes from " +
         "the note's own frontmatter.",
     });
+
+    // ── Reset ──────────────────────────────────────────────────
+
+    new Setting(containerEl)
+      .setName("Reset settings")
+      .setDesc("Restore every Advanced Infobox setting to its default.")
+      .addButton((button) => {
+        let armed = false;
+        button
+          .setButtonText("Reset to defaults")
+          .setWarning()
+          .onClick(async () => {
+            if (!armed) {
+              armed = true;
+              button.setButtonText("Click again to confirm");
+              setTimeout(() => {
+                armed = false;
+                button.setButtonText("Reset to defaults");
+              }, 3000);
+              return;
+            }
+            this.plugin.settings = { ...DEFAULT_SETTINGS };
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
   }
 }
