@@ -674,3 +674,26 @@ body.theme-dark .aib-preset-wikipedia .aib-infobox {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Bases hover popover ───────────────────────────────────── */
+
+/* Floating card shown when hovering a note's link inside a Base. The infobox
+   inside carries its own background/border; this wrapper only positions it,
+   caps its height to the viewport, and lifts it above the Base. */
+.aib-hover-popover {
+  position: fixed;
+  z-index: var(--layer-popover, 30);
+  width: min(var(--aib-width, 22em), 90vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: var(--aib-radius, var(--radius-m, 8px));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* The container's float/placement rules are scoped to the markdown views, so
+   in the popover it needs to simply fill the card. */
+.aib-hover-popover .aib-container {
+  float: none;
+  width: 100%;
+  margin: 0;
+}
