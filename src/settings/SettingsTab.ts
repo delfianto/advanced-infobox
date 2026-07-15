@@ -48,21 +48,6 @@ export class InfoboxSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Auto-embed")
-      .setDesc(
-        "Show an infobox at the top of a note automatically — no ```infobox``` block needed — " +
-          "for notes whose template property is set (e.g. infobox: person, or infobox: true). " +
-          "A note opts out with infobox: false; notes with an explicit block are left untouched.",
-      )
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.autoEmbed).onChange(async (value) => {
-          this.plugin.settings.autoEmbed = value;
-          await this.plugin.saveSettings();
-          this.plugin.reloadAutoEmbed();
-        }),
-      );
-
-    new Setting(containerEl)
       .setName("Live Preview presentation")
       .setDesc(
         "Editor lines cannot wrap around a floated widget, so Live Preview shows a non-wrapping card instead. Reading view is unaffected.",

@@ -1,6 +1,6 @@
 import { type BlockConfig, parseBlockConfig } from "src/model/block-config";
 import { MarkdownRenderChild, moment, Notice, TFile } from "obsidian";
-import { mount, unmount } from "svelte";
+import { mount, tick, unmount } from "svelte";
 import type AdvancedInfoboxPlugin from "src/main";
 import { buildViewModel } from "src/model/schema";
 import { createMarkdownRenderer } from "src/view/markdown";
@@ -28,6 +28,15 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
   /** >0 while a field editor is focused; refreshes defer until it settles. */
   private editDepth = 0;
   private pendingRefresh = false;
+  /** Bound markdown renderer (a promise per cell) + this render's in-flight tasks. */
+  private renderMd!: (markdown: string, el: HTMLElement) => Promise<void>;
+  private renderTasks: Promise<unknown>[] = [];
+  /**
+   * The first full render (view model built, Svelte mounted, every cell's
+   * markdown rendered). The code block processor awaits `rendered` so PDF export
+   * / print serialize a complete box instead of an empty shell.
+   */
+  private firstRender: Promise<void> = Promise.resolve();
 
   constructor(
     containerEl: HTMLElement,
@@ -38,6 +47,10 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     super(containerEl);
   }
 
+  get rendered(): Promise<void> {
+    return this.firstRender;
+  }
+
   override onload(): void {
     this.plugin.attach(this);
 
@@ -46,20 +59,19 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     this.blockErrors = errors;
     this.model.errors = errors;
     this.model.collapsed = this.plugin.initialCollapsed(this.sourcePath);
-    this.refresh();
 
-    this.registerEvent(
-      this.plugin.app.metadataCache.on("changed", (file) => {
-        if (file.path === this.sourcePath) this.refresh();
-      }),
-    );
-
+    // Mount first (with a null view model, so nothing paints yet), then refresh:
+    // every cell's markdown render then happens after the component exists, so
+    // `renderTasks` captures them all for the `rendered` gate.
+    this.renderMd = createMarkdownRenderer(this.plugin.app, this.sourcePath, this);
     this.component = mount(Infobox, {
       target: this.containerEl,
       props: {
         model: this.model,
         ctx: {
-          renderMarkdown: createMarkdownRenderer(this.plugin.app, this.sourcePath, this),
+          renderMarkdown: (markdown: string, el: HTMLElement) => {
+            this.renderTasks.push(this.renderMd(markdown, el));
+          },
           resolveImage: (raw: string) => this.resolveImage(raw),
           formatDate: (iso: string) => this.formatDate(iso),
           persistCollapse: (collapsed: boolean) =>
@@ -71,6 +83,13 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
       },
     });
 
+    this.registerEvent(
+      this.plugin.app.metadataCache.on("changed", (file) => {
+        if (file.path === this.sourcePath) this.refresh();
+      }),
+    );
+
+    this.firstRender = this.doRefresh();
     this.observePaneWidth();
   }
 
@@ -93,11 +112,12 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
       this.pendingRefresh = true;
       return;
     }
-    void this.refreshAsync();
+    void this.doRefresh();
   }
 
-  private async refreshAsync(): Promise<void> {
+  private async doRefresh(): Promise<void> {
     const seq = ++this.refreshSeq;
+    this.renderTasks = [];
     const { settings } = this.plugin;
 
     const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
@@ -140,6 +160,12 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     this.model.editEnabled = settings.editInBox;
     this.model.collapsible = settings.lpCollapse !== "off";
     this.applyContainerClasses();
+
+    // Let Svelte mount the cells (their {@attach} handlers push into
+    // renderTasks), then wait for each cell's markdown to finish rendering, so a
+    // caller awaiting `rendered` (PDF export) sees a fully-populated box.
+    await tick();
+    await Promise.allSettled(this.renderTasks);
   }
 
   private beginEdit(): void {

@@ -15,65 +15,29 @@ cold in a future session.
 
 ---
 
-## 1. Auto-embed mode (infobox without an anchor block) — *shipped 2026-07-15, verified in Obsidian 1.12.7*
+## 1. Auto-embed mode (infobox without an anchor block) — *removed 2026-07-15*
 
-Renders the infobox at the top of qualifying notes, no ` ```infobox ` block
-needed. Behind the global **Auto-embed** toggle (default off). Verified end to
-end by driving a real Obsidian over its remote-debugging port (CDP): reading
-float + wrap, LP card under Properties, template resolution, per-note opt-out,
-and the double-render guard all confirmed with screenshots + DOM assertions.
+Shipped, then removed the same day. Auto-embed injected a box that isn't in the
+markdown (triggered by the `infobox:` frontmatter property, no ` ```infobox `
+block). That injection is fundamentally fragile: Obsidian tears the box down on
+a view-mode switch and never re-runs post-processors on the way back, and its
+PDF/print render pass has no `.markdown-preview-sizer`, no `ctx.frontmatter`, and
+no `getSectionInfo` — so the box vanished after a reading↔editing round-trip and
+never appeared in exports. Several fixes (poll-until-attached, a `layout-change`
+rerender hook, an export-specific injection path) each patched one render context
+while destabilising another.
 
-Scope chosen this session:
-- **Trigger** (single mode, not the three surveyed): the note carries the
-  template property (`templateKey`, `infobox` by default) set truthy —
-  `infobox: person` (also selects that template) or `infobox: true`.
-  `infobox: false`/`no`/`off`/empty is a per-note opt-out. Reuses the one
-  property that already names a template, so there's a single knob.
-- **Both view modes.** A note with an explicit anchor block is never
-  double-rendered: both paths scan the source for an ` ```infobox ` fence and
-  step aside.
+Decision (with the user): drop it. The ` ```infobox ` **code block is the one
+stable path** — anchored in the markdown, it survives view switches and exports
+correctly, and it already supports templates (`template: <id>`, filled from the
+note's own frontmatter). Removed `src/model/auto-embed.ts`,
+`src/view/auto-embed-reading.ts`, `src/view/auto-embed-live.ts`,
+`src/view/InfoboxWidget.ts`, `src/view/frontmatter-boundary.ts`, their tests, the
+`autoEmbed` setting + toggle, and the `reloadAutoEmbed`/`refreshAutoEmbedFor`
+wiring. The `@codemirror/*` devDeps stay (still type the build's externals).
 
-Architecture (for cold resume):
-- `src/model/auto-embed.ts` — pure gates `isAutoEmbedTrigger`,
-  `qualifiesForAutoEmbed`, `hasInfoboxAnchor` + the shared `AUTO_EMBED_CLASS`
-  (unit-tested).
-- **Reading view** `src/view/auto-embed-reading.ts`: a
-  `registerMarkdownPostProcessor` injecting one `.aib-auto-embed` container
-  into `.markdown-preview-sizer` (after the inline title), once per render
-  (self-healing marker element, no docId tracking). Skips embeds/popovers and
-  Live Preview (no sizer). Mounts the ordinary `InfoboxRenderChild`, empty source.
-- **Live Preview** `src/view/auto-embed-live.ts` (a **`StateField<DecorationSet>`**)
-  + `src/view/InfoboxWidget.ts` (block widget) + `src/view/frontmatter-boundary.ts`
-  (`bodyStart`, unit-tested). Widget sits below the Properties widget, is `eq`
-  by note path (no per-keystroke remount), `ignoreEvent`s to keep the caret out,
-  keys its child by DOM element (WeakMap) so CM's instance-swap on an `eq` match
-  can't leak the child, and gates on `editorLivePreviewField` (no widget in raw
-  Source mode). File comes from `editorInfoField` (no view/leaf lookup).
-- Toggling reflects immediately via `plugin.reloadAutoEmbed()`; frontmatter
-  edits reach the LP widget via `refreshAutoEmbedFor` on `metadataCache`
-  "changed" (both dispatch an `autoEmbedRefresh` StateEffect).
-- `@codemirror/state` / `@codemirror/view` added as devDeps (typings only;
-  already in the build's `external` list).
-
-Two non-obvious runtime bugs caught only by driving real Obsidian (both fixed):
-1. **Block decorations may not come from a `ViewPlugin`** ("Block decorations
-   may not be specified via plugins"). Because a MarkdownView always builds its
-   editor sub-view, the throw during `setViewData` broke the *entire* note load
-   for any qualifying note. Fix: deliver via a `StateField` (which is allowed).
-2. **Reading-view post-processor runs on detached section elements** (and
-   throwaway copies), so `el.closest(sizer)` is null at call time and injection
-   silently never fires. Fix: poll briefly (up to ~1s) and inject the moment the
-   element attaches; give up on copies that never do.
-
-Remaining / known limitations:
-- In reading mode the (hidden) editor sub-view also mounts its LP widget — one
-  extra off-screen render per qualifying note. Harmless and mirrors how the
-  anchor block renders in both sub-views; not worth special-casing.
-- LP anchor scan is `doc.toString()` per doc-change — fine for normal notes,
-  revisit only if huge-note typing lags.
-- Coexistence with `fold-properties-by-default` / `banners-reloaded` around the
-  frontmatter is untested (the user's real vault has these; the isolated test
-  vault does not).
+Migration: an auto-embed note gets its box back by adding an empty ` ```infobox `
+block — it still reads `infobox: <template>` from frontmatter as the template.
 
 ## 2. Block-option editor suggestion — *low priority (deferred 2026-07-15)*
 
@@ -185,13 +149,17 @@ Deliberately out of scope (not editable):
   (bool toggle, list ×/＋Add, inputs); `ResizeObserver` was already guarded, and
   number/date fields use native mobile pickers. Can't drive mobile Obsidian over
   CDP, so real on-device verification (touch, WebView quirks) is still manual.
-- **PDF export spot-check** *(on-screen verified 2026-07-15; artifact check
-  manual)*: confirmed the reading-view float renders correctly (box floats right,
-  prose wraps to its left) and the float CSS is not `@media`-gated, so it applies
-  in Obsidian's PDF export (which renders the reading-view DOM). Couldn't produce
-  a real exported PDF automatically — `Page.printToPDF` is blocked on the Electron
-  remote-debug socket — so eyeballing the paginated PDF once via File → Export to
-  PDF remains a manual step.
+- **PDF export** *(fixed 2026-07-15, verified via Obsidian's render API)*:
+  code-block infoboxes didn't render in Obsidian's PDF export — the code-block
+  processor returned synchronously, so the export serialized the DOM before the
+  async render (template resolution, Svelte mount, per-cell `MarkdownRenderer`)
+  finished. Fix: the processor is now `async` and awaits the child's first full
+  render (`InfoboxRenderChild.rendered`), which export awaits in turn. Verified
+  by driving Obsidian's own `MarkdownRenderer.render` (the API export uses): the
+  box + table serialize complete. The reading-view float itself prints fine (CSS
+  not `@media`-gated). Couldn't drive the real File → Export to PDF over CDP
+  (`Page.printToPDF` is blocked on the Electron socket; the save dialog is
+  native), so a final human eyeball of the paginated PDF is still worthwhile.
 
 ## 6. Testing gaps
 
