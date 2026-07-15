@@ -3,6 +3,9 @@
 Wiki-style infoboxes for [Obsidian](https://obsidian.md), rendered from your plain, flat
 frontmatter. Your properties stay the single source of truth; the infobox is just a view.
 
+> **📖 [Full documentation →](docs/README.md)** — getting started, the data model, templates,
+> block options, settings, theming, and a complete D&D 5e worked example, all with screenshots.
+
 ## Obligatory disclosure, and a word to the detractors
 
 Yes, this plugin was written by an AI, directed by a human with strong opinions and a
