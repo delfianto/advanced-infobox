@@ -1,6 +1,8 @@
 <script lang="ts">
   import { type InfoboxModel, type RenderContext } from "src/view/infobox-state.svelte";
+  import { isEditableValue, parseNumberInput } from "src/model/edit";
   import { type FieldValue } from "src/model/values";
+  import { type InfoboxField } from "src/model/schema";
 
   const { model, ctx }: { model: InfoboxModel; ctx: RenderContext } = $props();
 
@@ -12,6 +14,32 @@
   function toggleCollapse(): void {
     model.collapsed = !model.collapsed;
     ctx.persistCollapse(model.collapsed);
+  }
+
+  function toggleBool(event: MouseEvent, key: string, current: boolean): void {
+    event.stopPropagation();
+    ctx.commitField(key, !current);
+  }
+
+  function commitNumber(input: HTMLInputElement, key: string, original: number): void {
+    const parsed = parseNumberInput(input.value);
+    if (parsed === null) input.value = String(original);
+    else if (parsed !== original) ctx.commitField(key, parsed);
+    ctx.endEdit();
+  }
+
+  function onNumberKeydown(event: KeyboardEvent, original: number): void {
+    // Keep Live Preview's CM6 editor from treating these as document keystrokes.
+    event.stopPropagation();
+    const input = event.currentTarget as HTMLInputElement;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      input.blur();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      input.value = String(original);
+      input.blur();
+    }
   }
 </script>
 
@@ -55,6 +83,34 @@
     {/if}
   {:else}
     <span class="aib-empty">—</span>
+  {/if}
+{/snippet}
+
+{#snippet editor(field: InfoboxField)}
+  {@const value = field.value}
+  {#if value.kind === "boolean"}
+    {@const on = value.value}
+    <button
+      type="button"
+      class="aib-edit aib-edit-bool"
+      role="switch"
+      aria-checked={on}
+      aria-label={field.label}
+      onclick={(event) => toggleBool(event, field.key, on)}
+    >
+      {@render fieldValue(value)}
+    </button>
+  {:else if value.kind === "number"}
+    {@const current = value.value}
+    <input
+      type="number"
+      class="aib-edit aib-edit-number"
+      value={current}
+      aria-label={field.label}
+      onfocus={() => ctx.beginEdit()}
+      onblur={(event) => commitNumber(event.currentTarget, field.key, current)}
+      onkeydown={(event) => onNumberKeydown(event, current)}
+    />
   {/if}
 {/snippet}
 
@@ -119,7 +175,13 @@
               {#each section.fields as field (field.key)}
                 <tr>
                   <th class="aib-label" scope="row">{field.label}</th>
-                  <td class="aib-value">{@render fieldValue(field.value)}</td>
+                  <td class="aib-value">
+                    {#if model.editEnabled && isEditableValue(field.value)}
+                      {@render editor(field)}
+                    {:else}
+                      {@render fieldValue(field.value)}
+                    {/if}
+                  </td>
                 </tr>
               {/each}
             {/each}

@@ -1,5 +1,5 @@
 import { type BlockConfig, parseBlockConfig } from "src/model/block-config";
-import { MarkdownRenderChild, moment, TFile } from "obsidian";
+import { MarkdownRenderChild, moment, Notice, TFile } from "obsidian";
 import { mount, unmount } from "svelte";
 import type AdvancedInfoboxPlugin from "src/main";
 import { buildViewModel } from "src/model/schema";
@@ -24,6 +24,9 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
   private resizeObserver: ResizeObserver | null = null;
   /** Refresh is async (template resolution reads files); last one wins. */
   private refreshSeq = 0;
+  /** >0 while a field editor is focused; refreshes defer until it settles. */
+  private editDepth = 0;
+  private pendingRefresh = false;
 
   constructor(
     containerEl: HTMLElement,
@@ -60,6 +63,9 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
           formatDate: (iso: string) => this.formatDate(iso),
           persistCollapse: (collapsed: boolean) =>
             this.plugin.rememberCollapsed(this.sourcePath, collapsed),
+          commitField: (key: string, value: number | boolean) => void this.commitField(key, value),
+          beginEdit: () => this.beginEdit(),
+          endEdit: () => this.endEdit(),
         },
       },
     });
@@ -79,6 +85,13 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
   /** Recomputes the view model; also called by the plugin on settings changes. */
   refresh(): void {
+    // While a field editor is focused, defer: replacing the view model would
+    // tear down the live <input> mid-edit — and our own write re-enters here
+    // via metadataCache "changed". Reconcile once editing settles (endEdit).
+    if (this.editDepth > 0) {
+      this.pendingRefresh = true;
+      return;
+    }
     void this.refreshAsync();
   }
 
@@ -123,8 +136,35 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     this.model.errors = [...this.blockErrors, ...warnings];
     this.model.arrayStyle = settings.arrayStyle;
     this.model.booleanStyle = settings.booleanStyle;
+    this.model.editEnabled = settings.editInBox;
     this.model.collapsible = settings.lpCollapse !== "off";
     this.applyContainerClasses();
+  }
+
+  private beginEdit(): void {
+    this.editDepth++;
+  }
+
+  private endEdit(): void {
+    this.editDepth = Math.max(0, this.editDepth - 1);
+    if (this.editDepth === 0 && this.pendingRefresh) {
+      this.pendingRefresh = false;
+      this.refresh();
+    }
+  }
+
+  /** Writes a scalar edit back to frontmatter; never touches the note body. */
+  private async commitField(key: string, value: number | boolean): Promise<void> {
+    const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
+    if (!(file instanceof TFile)) return;
+    try {
+      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+        frontmatter[key] = value;
+      });
+    } catch (error) {
+      new Notice(`Advanced Infobox: could not save "${key}".`);
+      console.error("[advanced-infobox] processFrontMatter failed", error);
+    }
   }
 
   private formatDate(iso: string): string {
