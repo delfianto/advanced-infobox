@@ -1,4 +1,5 @@
 import { type ArrayStyle, type BooleanStyle } from "src/settings/settings";
+import { type EditableValue } from "src/model/edit";
 import { type InfoboxViewModel } from "src/model/schema";
 
 /**
@@ -32,8 +33,8 @@ export interface RenderContext {
   formatDate: (iso: string) => string;
   /** Remembers the user's collapse toggle across CM6 widget remounts. */
   persistCollapse: (collapsed: boolean) => void;
-  /** Writes a scalar edit straight to the note's frontmatter. */
-  commitField: (key: string, value: string | number | boolean) => void;
+  /** Writes an edit straight to the note's frontmatter (scalar or list). */
+  commitField: (key: string, value: EditableValue) => void;
   /** Bracket a focused edit so refreshes defer until it settles (echo-loop guard). */
   beginEdit: () => void;
   endEdit: () => void;

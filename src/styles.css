@@ -508,6 +508,48 @@ input.aib-edit:focus {
   background: var(--background-primary);
 }
 
+/* List editor: one row per item (text input + remove), then an add button. */
+.aib-list-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.aib-list-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.aib-list-edit-item {
+  flex: 1;
+}
+
+.aib-list-edit-remove,
+.aib-list-edit-add {
+  all: unset;
+  cursor: pointer;
+  padding: 0 0.35em;
+  border-radius: var(--aib-radius, 4px);
+  color: var(--aib-muted-color, var(--text-muted));
+  line-height: 1.4;
+}
+
+.aib-list-edit-add {
+  align-self: flex-start;
+  font-size: 0.9em;
+}
+
+.aib-list-edit-remove:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-error, #e03c3c);
+}
+
+.aib-list-edit-add:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
 /* ── Tags ──────────────────────────────────────────────────── */
 
 .aib-tags {

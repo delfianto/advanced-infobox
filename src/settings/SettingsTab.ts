@@ -271,9 +271,10 @@ export class InfoboxSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Edit properties in infobox")
       .setDesc(
-        "Make boolean, number, text, and date fields editable in the box: click a checkbox to flip " +
-          "it, or type into a field (Enter or clicking away commits, Escape cancels). Edits are " +
-          "written straight to the note's frontmatter. List fields stay read-only for now.",
+        "Make boolean, number, text, date, and list fields editable in the box: click a checkbox " +
+          "to flip it, type into a field (Enter or clicking away commits, Escape cancels), or add " +
+          "and remove list items. Edits are written straight to the note's frontmatter. Datetime " +
+          "and nested/object values stay read-only.",
       )
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.editInBox).onChange(async (value) => {

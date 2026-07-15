@@ -1,8 +1,9 @@
 <script lang="ts">
   import { type InfoboxModel, type RenderContext } from "src/view/infobox-state.svelte";
-  import { isEditableValue, parseNumberInput } from "src/model/edit";
+  import { isEditableValue, listItemText, parseNumberInput } from "src/model/edit";
   import { type FieldValue } from "src/model/values";
   import { type InfoboxField } from "src/model/schema";
+  import ListEditor from "src/view/ListEditor.svelte";
 
   const { model, ctx }: { model: InfoboxModel; ctx: RenderContext } = $props();
 
@@ -142,6 +143,11 @@
       onblur={(event) => commitString(event.currentTarget, field.key, iso)}
       onkeydown={(event) => onEditKeydown(event, iso)}
     />
+  {:else if value.kind === "list"}
+    {@const texts = value.items.map((item) => listItemText(item))}
+    {#key JSON.stringify(texts)}
+      <ListEditor fieldKey={field.key} initial={texts} {ctx} />
+    {/key}
   {/if}
 {/snippet}
 
