@@ -6,13 +6,21 @@
  */
 import { type FieldValue } from "src/model/values";
 
+/** Date-only ISO value (no time component) — editable with <input type=date>. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/u;
+
+export function isDateOnly(iso: string): boolean {
+  return DATE_ONLY.test(iso);
+}
+
 /**
- * v1 edits only scalar booleans and numbers. They round-trip through YAML with
- * no quoting hazard (unlike strings that look like dates, or `[[wikilinks]]`)
- * and are unambiguous to write back. Strings, dates, and lists come later.
+ * Which field values can be edited in place. Scalars (boolean, number, string)
+ * and date-only values round-trip cleanly through frontmatter; datetime values
+ * (a time component) and lists are left read-only for now.
  */
 export function isEditableValue(value: FieldValue): boolean {
-  return value.kind === "boolean" || value.kind === "number";
+  if (value.kind === "date") return isDateOnly(value.iso);
+  return value.kind === "boolean" || value.kind === "number" || value.kind === "markdown";
 }
 
 /**

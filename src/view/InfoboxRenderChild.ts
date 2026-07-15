@@ -63,7 +63,8 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
           formatDate: (iso: string) => this.formatDate(iso),
           persistCollapse: (collapsed: boolean) =>
             this.plugin.rememberCollapsed(this.sourcePath, collapsed),
-          commitField: (key: string, value: number | boolean) => void this.commitField(key, value),
+          commitField: (key: string, value: string | number | boolean) =>
+            void this.commitField(key, value),
           beginEdit: () => this.beginEdit(),
           endEdit: () => this.endEdit(),
         },
@@ -154,7 +155,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
   }
 
   /** Writes a scalar edit back to frontmatter; never touches the note body. */
-  private async commitField(key: string, value: number | boolean): Promise<void> {
+  private async commitField(key: string, value: string | number | boolean): Promise<void> {
     const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
     if (!(file instanceof TFile)) return;
     try {
