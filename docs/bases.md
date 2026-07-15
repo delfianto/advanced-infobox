@@ -1,9 +1,10 @@
 # Bases
 
-Advanced Infobox connects to Obsidian [Bases](https://help.obsidian.md/bases) in both
-directions: it **generates** a Base from a folder of infobox notes, and it **previews** a
-note's infobox on hover inside any Base. Both need the core Bases plugin (Obsidian 1.9+) and
-quietly do nothing without it, so the rest of the plugin still works on older Obsidian.
+Advanced Infobox connects to Obsidian [Bases](https://help.obsidian.md/bases) three ways: it
+**generates** a Base from a folder of infobox notes, **previews** a note's infobox on hover
+inside any Base, and adds an **Infobox view** that renders every entry as its full box. All
+three need the core Bases plugin (Obsidian 1.9+) and quietly do nothing without it, so the
+rest of the plugin still works on older Obsidian.
 
 ## Create a Base from a folder
 
@@ -61,11 +62,28 @@ The hover is **best-effort** — it reads the Base's rendered markup rather than
 hook. Native Bases **cards do not expose a file link** in their DOM, so a card's own note
 isn't hoverable and hover is effectively table-first. (The plugin deliberately does *not*
 guess the note from a card's title text, which would show the wrong infobox on any mismatch.)
-If full card hover matters to you, the clean path is a first-class custom Bases view via
-`registerBasesView` — noted in the [backlog](../AGENTS.md#backlog-and-parked-ideas).
+For a card-style gallery, use the [Infobox view](#the-infobox-view) below instead — a
+first-class Bases view that renders each entry directly, with no such limitation.
+
+## The Infobox view
+
+Rather than hovering for one box at a time, you can _browse_ a whole Base as infoboxes. Turn
+on **Infobox view in Bases** ([setting](settings.md#bases), **off by default**) and Bases
+gains a new view type — **Infobox** — next to Table and Cards. Pick it from a Base's view
+menu and every entry renders as its full infobox in a responsive gallery:
+
+![A Base's Infobox view: a gallery of full character infoboxes](images/bases-infobox-view.png)
+
+Because it's a first-class Bases view (registered through the plugin API, Obsidian 1.10+), it
+has none of the hover feature's card limitation — it holds the query's entries directly and
+renders each note's box with the same pipeline used everywhere else. Switching a generated
+base to this view gives you an instant character gallery.
+
+Registration happens when the plugin loads, so toggling the setting takes full effect after a
+reload.
 
 ## See also
 
 - [TTRPG character sheets](ttrpg-example.md#from-roster-to-base) — the roster → Base flow on a real 12-character party.
 - [Templates](templates.md) — the template that shapes the generated columns and labels.
-- [Settings](settings.md#bases) — the hover toggle.
+- [Settings](settings.md#bases) — the Bases toggles (hover preview and the Infobox view).

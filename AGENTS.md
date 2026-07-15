@@ -51,6 +51,8 @@ refreshes the box (guarded against a mid-edit teardown by an edit-depth latch).
     list values. `markdown.ts` renders a cell's markdown (a promise per cell).
   - `bases-hover.ts` — `BasesHoverPreview`: hover a note link in a Base → its
     infobox in a popover (best-effort; reads `.bases-view [data-href]`).
+  - `bases-infobox-view.ts` — `InfoboxBasesView`: a first-class Bases view
+    (`registerBasesView`) that renders each entry as its infobox (opt-in).
   - `TemplatePickerModal.ts` — fuzzy template picker for the insert commands.
 - **`src/settings/`** — `settings.ts` (the `InfoboxSettings` type + `DEFAULT_SETTINGS`
   + parsers), `SettingsTab.ts` (the UI), `folder-suggest.ts`.
@@ -158,9 +160,10 @@ Not scheduled — open ideas and known gaps, kept here so they aren't lost:
 - **Component tests** for `Infobox.svelte` + `InfoboxRenderChild` — need vitest
   browser mode (or a DOM-capable obsidian mock). Currently covered only by the
   CDP pass above.
-- **Full card hover in Bases** — native Bases cards expose no file link in their
-  DOM, so the DOM-hook hover is table-first. A first-class `registerBasesView`
-  custom "Infobox" view (typed API exists since Obsidian 1.10) is the clean path.
+- **Hover on native Bases cards** — cards expose no file link in their DOM, so
+  the DOM-hook hover is table-first. Not really fixable without an official hook;
+  the opt-in Infobox view (`bases-infobox-view.ts`) covers the "browse as cards"
+  need instead.
 - **Block-option `EditorSuggest`** — autocomplete inside ` ```infobox ` fences.
   Deferred (the block language is tiny and documented).
 - **Template inheritance** (`extends:`), **per-template CSS class**

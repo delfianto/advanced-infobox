@@ -9,6 +9,7 @@ import {
   TFile,
 } from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
+import { INFOBOX_BASES_VIEW, InfoboxBasesView } from "src/view/bases-infobox-view";
 import { BasesHoverPreview } from "src/view/bases-hover";
 import { buildBaseConfig } from "src/model/base-config";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
@@ -33,6 +34,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
   override settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
   readonly templates = new TemplateRegistry(this.app, () => this.settings.templateFolder);
   private readonly basesHover = new BasesHoverPreview(this);
+  private basesViewRegistered = false;
 
   private readonly children = new Set<InfoboxRenderChild>();
   private styleEl: HTMLStyleElement | null = null;
@@ -145,6 +147,20 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     this.addSettingTab(new InfoboxSettingTab(this.app, this));
     this.applySettingsCss();
     this.basesHover.register();
+    if (this.settings.basesInfoboxView) this.registerInfoboxBasesView();
+  }
+
+  /**
+   * Registers the "Infobox" Bases view (Obsidian 1.10+), once. Feature-detected
+   * so the plugin still loads on older Obsidian, where the API is absent.
+   */
+  registerInfoboxBasesView(): void {
+    if (this.basesViewRegistered || typeof this.registerBasesView !== "function") return;
+    this.basesViewRegistered = this.registerBasesView(INFOBOX_BASES_VIEW, {
+      name: "Infobox",
+      icon: "layout-grid",
+      factory: (controller, containerEl) => new InfoboxBasesView(controller, containerEl, this),
+    });
   }
 
   override onunload(): void {
