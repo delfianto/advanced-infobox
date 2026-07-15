@@ -91,7 +91,7 @@ registry (`templates.ids()`), and frontmatter keys of the current note for
 `exclude`/`sections` lists. Trigger detection: `editor.getLine` scan upward
 for the opening fence. Moderate effort, big ergonomics win.
 
-## 3. Property write-back (inline editing in the box) — *boolean/number + string/date shipped 2026-07-15 (verified in Obsidian 1.12.7); lists pending*
+## 3. Property write-back (inline editing in the box) — *shipped 2026-07-15, verified in Obsidian 1.12.7 (boolean, number, string, date, list)*
 
 Clicking a value in the infobox edits it; commit via
 `fileManager.processFrontMatter` (never touches the body). Behind the global
@@ -100,24 +100,32 @@ driving real Obsidian (CDP) in both Reading view and Live Preview: every editor
 writes frontmatter and the box updates in place; strings and dates round-trip,
 Escape reverts, and the box floats/renders exactly as read-only.
 
-Shipped — every scalar plus date-only values:
+Shipped — every scalar, date-only values, and lists of scalars:
 - **boolean** → a clickable button reusing the ✓/✗ display (commits on click).
 - **number** → `<input type=number>`; commits on blur/Enter, reverts on Escape
   or invalid input (`parseNumberInput` rejects empty/NaN/Infinity).
 - **string** (`markdown` kind) → `<input type=text>`, commits the raw value.
 - **date-only** (`YYYY-MM-DD`) → `<input type=date>`. Shows the OS date-picker
   format while editing is on, not `settings.dateFormat`. Datetime values (a time
-  component) stay read-only for now.
+  component) stay read-only.
+- **list of scalars** → one text input per item with a remove (×) button and an
+  add control. Any change rewrites the whole array in display order (order is
+  preserved), re-typing each item like a bare YAML scalar (`coerceScalar`), so a
+  numeric list stays numeric. Lists holding nested arrays/objects stay read-only.
 
 Architecture:
 - `src/model/edit.ts` — pure gates `isEditableValue` (boolean | number |
-  markdown | date-only), `isDateOnly`, `parseNumberInput`, unit-tested.
+  markdown | date-only | list-of-scalars), `isDateOnly`, `parseNumberInput`,
+  `listItemText`, and `coerceScalar` (all unit-tested).
 - Editors live at the field-row level in `Infobox.svelte`, never inside the
-  recursive `fieldValue` snippet, so nested list items are never editable.
-  Gated on `model.editEnabled` + `isEditableValue`. Text and date share one
-  `commitString` (empty reverts rather than clearing the property) and one
-  `onEditKeydown` (Enter commits, Escape reverts, `stopPropagation` keeps CM6
-  out).
+  recursive `fieldValue` snippet. Gated on `model.editEnabled` +
+  `isEditableValue`. Text and date share one `commitString` (empty reverts
+  rather than clearing) and one `onEditKeydown` (Enter commits, Escape reverts,
+  `stopPropagation` keeps CM6 out).
+- Lists get their own `src/view/ListEditor.svelte` child: a local `$state` draft
+  seeded from the saved items, with the parent wrapping it in a `{#key}` on the
+  list's content so an external change remounts it with fresh values (the latch
+  keeps that from landing mid-edit).
 - Commit: `InfoboxRenderChild.commitField` → `processFrontMatter`.
 - **Echo-loop latch** (the crux): the child's own `metadataCache."changed"`
   listener re-enters `refresh()`, which reassigns `model.vm` and would tear down
@@ -128,15 +136,15 @@ Architecture:
 - Live Preview focus: inputs receive focus and keystrokes inside the CM6
   code-block widget; no `contenteditable` needed.
 
-Remaining:
-- **Lists** (§#10): add/remove/edit — the hard one (array semantics;
-  single-item lists render plain and empties are filtered, both lossy).
-- Only fields backed directly by `frontmatter[key]` are editable; header fields
-  sourced via block-option overrides (`image`/`caption`) and the merged `tags`
-  are intentionally not click-to-edit. Nested-object values (rendered as inline
-  code) are string-editable but lossy — a known edge, discouraged anyway.
-- Clearing a field to empty reverts rather than deleting the property; remove it
-  from the Properties panel instead.
+Deliberately out of scope (not editable):
+- Header fields sourced via block-option overrides (`image`/`caption`) and the
+  merged `tags` — they don't map 1:1 to a single `frontmatter[key]`.
+- Datetime values (time component) and lists holding nested arrays/objects.
+- Nested-object scalars (rendered as inline code) are technically text-editable
+  but lossy — a known edge, discouraged anyway.
+- Clearing a field to empty reverts rather than deleting the property (and
+  emptying every list item writes `[]`); remove the property from the Properties
+  panel instead.
 
 ## 4. Docs (README is still the 3-line stub)
 

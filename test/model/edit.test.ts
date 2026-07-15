@@ -1,5 +1,11 @@
+import {
+  coerceScalar,
+  isDateOnly,
+  isEditableValue,
+  listItemText,
+  parseNumberInput,
+} from "src/model/edit";
 import { describe, expect, it } from "vitest";
-import { isDateOnly, isEditableValue, parseNumberInput } from "src/model/edit";
 import { type FieldValue } from "src/model/values";
 
 describe("isEditableValue", () => {
@@ -10,10 +16,22 @@ describe("isEditableValue", () => {
     expect(isEditableValue({ kind: "date", iso: "2026-07-15" })).toBe(true);
   });
 
-  it("leaves datetime, lists and empty read-only", () => {
+  it("allows a list whose items are all scalars", () => {
+    expect(
+      isEditableValue({
+        kind: "list",
+        items: [
+          { kind: "markdown", markdown: "Strider" },
+          { kind: "number", value: 3 },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it("leaves datetime, nested lists and empty read-only", () => {
     const readonly: FieldValue[] = [
       { kind: "date", iso: "2026-07-15T09:30" },
-      { kind: "list", items: [{ kind: "number", value: 1 }] },
+      { kind: "list", items: [{ kind: "list", items: [{ kind: "number", value: 1 }] }] },
       { kind: "empty" },
     ];
     for (const value of readonly) expect(isEditableValue(value)).toBe(false);
@@ -31,6 +49,37 @@ describe("isDateOnly", () => {
     expect(isDateOnly("2026-07-15 09:30")).toBe(false);
     expect(isDateOnly("2026-7-5")).toBe(false);
     expect(isDateOnly("not a date")).toBe(false);
+  });
+});
+
+describe("listItemText", () => {
+  it("renders each scalar item as its editable text", () => {
+    expect(listItemText({ kind: "number", value: 5 })).toBe("5");
+    expect(listItemText({ kind: "boolean", value: false })).toBe("false");
+    expect(listItemText({ kind: "markdown", markdown: "Strider" })).toBe("Strider");
+    expect(listItemText({ kind: "date", iso: "2026-01-02" })).toBe("2026-01-02");
+  });
+});
+
+describe("coerceScalar", () => {
+  it("types booleans and canonical numbers, keeps everything else as text", () => {
+    expect(coerceScalar("true")).toBe(true);
+    expect(coerceScalar("false")).toBe(false);
+    expect(coerceScalar("42")).toBe(42);
+    expect(coerceScalar("-3.5")).toBe(-3.5);
+    expect(coerceScalar("Strider")).toBe("Strider");
+    expect(coerceScalar("  spaced  ")).toBe("spaced");
+  });
+
+  it("keeps non-canonical number-ish strings as text (no data surprises)", () => {
+    expect(coerceScalar("007")).toBe("007");
+    expect(coerceScalar("1e3")).toBe("1e3");
+    expect(coerceScalar("3px")).toBe("3px");
+  });
+
+  it("returns null for empty/whitespace so the row is dropped", () => {
+    expect(coerceScalar("")).toBeNull();
+    expect(coerceScalar("   ")).toBeNull();
   });
 });
 

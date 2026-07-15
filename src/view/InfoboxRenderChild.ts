@@ -4,6 +4,7 @@ import { mount, unmount } from "svelte";
 import type AdvancedInfoboxPlugin from "src/main";
 import { buildViewModel } from "src/model/schema";
 import { createMarkdownRenderer } from "src/view/markdown";
+import { type EditableValue } from "src/model/edit";
 import Infobox from "src/view/Infobox.svelte";
 import { InfoboxModel } from "src/view/infobox-state.svelte";
 
@@ -63,8 +64,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
           formatDate: (iso: string) => this.formatDate(iso),
           persistCollapse: (collapsed: boolean) =>
             this.plugin.rememberCollapsed(this.sourcePath, collapsed),
-          commitField: (key: string, value: string | number | boolean) =>
-            void this.commitField(key, value),
+          commitField: (key: string, value: EditableValue) => void this.commitField(key, value),
           beginEdit: () => this.beginEdit(),
           endEdit: () => this.endEdit(),
         },
@@ -155,7 +155,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
   }
 
   /** Writes a scalar edit back to frontmatter; never touches the note body. */
-  private async commitField(key: string, value: string | number | boolean): Promise<void> {
+  private async commitField(key: string, value: EditableValue): Promise<void> {
     const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
     if (!(file instanceof TFile)) return;
     try {
