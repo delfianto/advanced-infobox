@@ -213,6 +213,90 @@ describe("buildViewModel", () => {
       expect(vm.sections[1].fields.map((f) => f.key)).toEqual(["class"]);
     });
 
+    it("uses template body sections when the block has none", () => {
+      const vm = buildViewModel(
+        input({
+          frontmatter,
+          template: {
+            id: "character",
+            labels: { race: "Ancestry" },
+            order: [],
+            sections: [{ label: "Identity", keys: ["race", "class"] }],
+          },
+        }),
+      );
+      expect(vm.sections.map((s) => s.label)).toEqual(["Identity", undefined]);
+      expect(vm.sections[0].fields.map((f) => f.label)).toEqual(["Ancestry", "Class"]);
+    });
+
+    it("falls back to template frontmatter order when body has no sections", () => {
+      const vm = buildViewModel(
+        input({
+          frontmatter,
+          template: {
+            id: "character",
+            labels: {},
+            order: ["class", "race"],
+            sections: [],
+            unlisted: "hide",
+          },
+        }),
+      );
+      expect(vm.sections).toHaveLength(1);
+      expect(vm.sections[0].label).toBeUndefined();
+      expect(keys(vm)).toEqual(["class", "race"]);
+    });
+
+    it("lets block sections beat template sections", () => {
+      const vm = buildViewModel(
+        input({
+          frontmatter,
+          blockConfig: { sections: [{ label: "Block", keys: ["race"] }], unlisted: "hide" },
+          template: {
+            id: "character",
+            labels: {},
+            order: [],
+            sections: [{ label: "Template", keys: ["class"] }],
+          },
+        }),
+      );
+      expect(vm.sections.map((s) => s.label)).toEqual(["Block"]);
+    });
+
+    it("template labels beat the global label map", () => {
+      const vm = buildViewModel(
+        input({
+          frontmatter: { race: "Dwarf" },
+          settings: { ...DEFAULT_SETTINGS, labelMap: { race: "Global" } },
+          template: { id: "t", labels: { race: "Template" }, order: [], sections: [] },
+        }),
+      );
+      expect(vm.sections[0].fields[0].label).toBe("Template");
+    });
+
+    it("block unlisted beats template unlisted", () => {
+      const vm = buildViewModel(
+        input({
+          frontmatter,
+          blockConfig: { unlisted: "show" },
+          template: {
+            id: "t",
+            labels: {},
+            order: ["race"],
+            sections: [],
+            unlisted: "hide",
+          },
+        }),
+      );
+      // Template says hide, block says show — everything renders.
+      expect(keys(vm)).toEqual(["race", "class", "strength", "dexterity", "languages"]);
+    });
+
+    it("never renders the template property itself as a field", () => {
+      const vm = buildViewModel(input({ frontmatter: { infobox: "person", born: "x" } }));
+      expect(keys(vm)).toEqual(["born"]);
+    });
+
     it("respects excludes inside sections", () => {
       const vm = buildViewModel(
         input({

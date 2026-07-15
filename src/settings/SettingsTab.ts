@@ -13,6 +13,7 @@ import {
   type TextAlign,
   type VisualPreset,
 } from "src/settings/settings";
+import { FolderSuggest } from "src/settings/folder-suggest";
 import type AdvancedInfoboxPlugin from "src/main";
 
 export class InfoboxSettingTab extends PluginSettingTab {
@@ -236,6 +237,46 @@ export class InfoboxSettingTab extends PluginSettingTab {
           this.plugin.settings.showTags = value;
           await this.plugin.saveSettings();
         }),
+      );
+
+    // ── Templates ──────────────────────────────────────────────
+
+    new Setting(containerEl).setName("Templates").setHeading();
+    containerEl.createEl("p", {
+      cls: "setting-item-description",
+      text:
+        "Templates are ordinary notes: frontmatter maps property keys to labels " +
+        "(key order = display order), headings in the body become sections with the " +
+        "listed keys beneath them. A note picks its template with the template " +
+        "property (e.g. infobox: person). Run “Create sample infobox templates” " +
+        "from the command palette to get starters.",
+    });
+
+    new Setting(containerEl)
+      .setName("Template folder")
+      .setDesc("Vault folder holding template notes; the note name is the template id.")
+      .addText((text) => {
+        new FolderSuggest(this.app, text.inputEl);
+        text
+          .setPlaceholder(DEFAULT_SETTINGS.templateFolder)
+          .setValue(this.plugin.settings.templateFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.templateFolder = value.trim() || DEFAULT_SETTINGS.templateFolder;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Template property")
+      .setDesc("Frontmatter key that names a note's template.")
+      .addText((text) =>
+        text
+          .setPlaceholder(DEFAULT_SETTINGS.templateKey)
+          .setValue(this.plugin.settings.templateKey)
+          .onChange(async (value) => {
+            this.plugin.settings.templateKey = value.trim() || DEFAULT_SETTINGS.templateKey;
+            await this.plugin.saveSettings();
+          }),
       );
 
     // ── Special keys ───────────────────────────────────────────

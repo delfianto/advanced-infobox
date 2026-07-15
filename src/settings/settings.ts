@@ -36,6 +36,10 @@ export interface InfoboxSettings {
   subtitleKey: string;
   imageKey: string;
   captionKey: string;
+  /** Frontmatter property that names a template note (flat string). */
+  templateKey: string;
+  /** Vault folder holding template notes; basename = template id. */
+  templateFolder: string;
 }
 
 export const DEFAULT_SETTINGS: InfoboxSettings = {
@@ -57,6 +61,8 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   subtitleKey: "subtitle",
   imageKey: "image",
   captionKey: "caption",
+  templateKey: "infobox",
+  templateFolder: "Templates/Infobox",
 };
 
 export const PLACEMENTS: readonly Placement[] = ["right", "left", "full"];
