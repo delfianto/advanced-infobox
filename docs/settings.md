@@ -38,6 +38,17 @@ for values you actually change, so the box follows your theme by default.
 | --- | --- | --- |
 | Edit properties in infobox | **off** | When on, boolean/number/text/date/list fields become editable in the box; edits write straight to frontmatter via Obsidian's own API. Datetime and nested/object values stay read-only. |
 
+## Bases
+
+Run **Create base from folder** from the command palette to generate an Obsidian
+[Base](https://help.obsidian.md/bases) (a table view + a cards view) from the notes in the
+active note's folder, using their detected [template](templates.md). See the
+[TTRPG example](ttrpg-example.md#from-roster-to-base).
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| Infobox on hover in Bases | **on** | Show a note's infobox in a popover when you hover a link to it inside a Base (e.g. a table's file-name column). Best-effort — reads Bases' rendered markup, so it does nothing without Bases. Native cards don't expose a file link, so hover is table-primary. |
+
 ## Templates
 
 | Setting | Default | Notes |

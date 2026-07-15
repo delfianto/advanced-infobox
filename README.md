@@ -121,6 +121,8 @@ Built-in starters via the **"Create sample infobox templates"** command: `person
 - **Create sample infobox templates** — write the starters (only missing ones)
 - **Add missing template properties to note** — scaffold the template's keys into
   frontmatter via Obsidian's own API
+- **Create base from folder** — generate an Obsidian Base (table + cards views) from the
+  active note's folder, using the template its notes share
 
 ## Settings
 

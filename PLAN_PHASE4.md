@@ -206,11 +206,11 @@ Deliberately out of scope (not editable):
 
 ## 8. Ideas parked (no commitment)
 
-- Bases integration — **two directions**:
-  - _Base → infobox_ (parked): render an infobox from a Bases entry, or a
-    "row → infobox" hover card.
-  - _infobox → Base_ (spec'd in §8.1 below, not committed): a command that
-    generates a `.base` from a folder of infobox notes.
+- Bases integration — **shipped 2026-07-15** (both directions; see §8.1):
+  - _infobox → Base_: a "Create base from folder" command generates a `.base`
+    (table + cards views) from a folder's detected template.
+  - _Base → infobox_: hovering a note's link in a Base shows its infobox in a
+    popover (best-effort; table file-name links and resolved wikilinks).
 - Template inheritance (`extends: person` in template frontmatter).
 - Per-template CSS class (`aib-template-<id>` on the container) for
   type-specific theming — trivial to add when someone wants
@@ -218,9 +218,33 @@ Deliberately out of scope (not editable):
 - ITS-style pipe modifiers on the block language (` ```infobox|left `) —
   redundant with block options; only if muscle memory demands it.
 
-### 8.1 Base generator — "Create base from folder" (spec'd 2026-07-15, not committed)
+### 8.1 Bases integration — shipped 2026-07-15 (verified in Obsidian 1.12.7)
 
-**Idea.** A command that stamps out an Obsidian **Base** from a folder of
+**Shipped.**
+
+- **Generator** (`src/model/base-config.ts` + the "Create base from folder"
+  command): detects a folder's dominant template and writes a typed `.base`
+  with a **table** view (traditional list) and a **cards** view — folder +
+  template-property filter, friendly column names (Bases shows raw property
+  ids otherwise), the template's label overrides carried for columns added
+  later. 7 unit tests.
+- **Hover preview** (`src/view/bases-hover.ts`, setting `basesHoverPreview`,
+  default on): a floating popover renders a note's infobox — via a standalone
+  `InfoboxRenderChild` — when the pointer rests on a link to it inside a
+  `.bases-view`. Reuses the whole render pipeline, so it matches the in-note
+  box and live-updates.
+
+**Learned (Obsidian 1.13.1 typings).** Obsidian ships a typed Bases API:
+`BasesConfigFile`/`BasesConfigFileView` (the `.base` schema), `BasesEntry`,
+`BasesView`, `registerBasesView`, `registerHoverLinkSource`; `stringifyYaml`
+writes the file. All `@since 1.10`, so the features feature-detect and the
+plugin's floor stays 1.4. Native Bases **cards expose no file link** in their
+DOM (the card title is plain text even with `title: file.name`), so a card's
+own note isn't hoverable — hover is table-primary; guessing the file from
+title text was rejected (wrong-infobox risk). A first-class `registerBasesView`
+custom view is the path if full card hover is wanted later.
+
+**Original design notes.** A command that stamps out an Obsidian **Base** from a folder of
 infobox notes — e.g. a folder of TTRPG character cards → a roster table + a
 card gallery in one click. Framed as a _built-in Bases preset_, not a live
 view: a **one-shot generator** that writes a `.base` file the user then owns

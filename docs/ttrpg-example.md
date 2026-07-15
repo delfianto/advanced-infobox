@@ -58,14 +58,20 @@ While you're editing, Live Preview shows the same sheet as a clean card:
 Turn on [in-box editing](settings.md#editing) and you can flip `inspiration`, bump a spell
 slot, or add a weapon straight from the card.
 
-## On the horizon: a roster → Base generator
+## From roster to Base
 
 Because these notes are a *folder of uniform, flat-frontmatter records*, they're the ideal
-input for an Obsidian **Base**. A planned command — spec'd in
-[`PLAN_PHASE4.md` §8.1](../PLAN_PHASE4.md) — would generate a `.base` straight from a folder
-like `Characters/`, projecting the same `dnd` template onto a **table view** (a roster) and a
-**cards view** (a character gallery), with the template's labels becoming column names. It's
-not built yet, but the data here is already shaped for it.
+input for an Obsidian **Base** — and the plugin builds one for you. With any character note
+open, run **Create base from folder**: it detects the `dnd` template the folder's notes
+share and writes a `.base` projecting it onto a **table view** (a roster) and a **cards
+view** (a gallery), with the template's labels becoming column names. The generated
+[`Characters.base`](../test-vault/Characters/Characters.base) ships in the test-vault.
+
+And it goes the other way too: with **Infobox on hover in Bases** enabled
+([setting](settings.md), on by default), hovering a character's name in that table pops the
+full sheet — the same infobox, floating over the Base. See
+[`PLAN_PHASE4.md` §8.1](../PLAN_PHASE4.md) for the design notes and the one caveat (native
+Bases *cards* don't expose a file link, so hover is table-primary).
 
 ## See also
 
