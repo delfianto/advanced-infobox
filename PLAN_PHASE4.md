@@ -161,16 +161,38 @@ Deliberately out of scope (not editable):
   (`Page.printToPDF` is blocked on the Electron socket; the save dialog is
   native), so a final human eyeball of the paginated PDF is still worthwhile.
 
-## 6. Testing gaps
+## 6. Testing gaps — *registry covered 2026-07-15; component tests still open*
 
-- No component tests: `Infobox.svelte` and `InfoboxRenderChild` are untested
-  (would need vitest browser mode or a fuller obsidian mock with DOM
-  helpers — `createEl`, `addClasses`, `MarkdownRenderChild` lifecycle).
-- No integration test for the registry (vault mock with template files).
+- ~~No integration test for the registry (vault mock with template files).~~
+  **Done:** `test/model/template-registry.test.ts` drives `TemplateRegistry`
+  through a fake vault/metadataCache — `ids()` scoping+sort, `contains()`,
+  `resolve()` (hit → parsed template, miss → null), and cache lifecycle
+  (`cachedRead` call-count proves caching + `invalidate(path)` /
+  `invalidate()`). 94 tests total. Note: `tsc` resolves `obsidian` to the real
+  package types (tsconfig `"*": ["./*"]` has no obsidian alias), while vitest
+  aliases it to the runtime mock — so the test constructs mock `TFile`
+  instances (for the registry's `instanceof TFile` check) and casts the fake
+  app `as unknown as App`.
+- **Still open — component tests:** `Infobox.svelte` and `InfoboxRenderChild`
+  are untested. This is the bigger lift: it needs vitest **browser mode** (or a
+  much fuller obsidian mock with DOM helpers — `createEl`, `addClasses`,
+  `MarkdownRenderChild` lifecycle, `MarkdownRenderer.render`). The pure logic
+  they lean on (`block-config`, `edit`, `schema`, `template`, `values`,
+  `settings`) is already well covered, so the untested surface is the
+  Svelte/DOM glue and the render/edit-latch wiring — best validated by the CDP
+  drive-Obsidian pass we already use per increment.
 - Visual regression is manual (test-vault notes serve as fixtures).
 
-## 7. Toolchain watch-list (vite-plus alpha)
+## 7. Toolchain watch-list (vite-plus) — *checked 2026-07-15: already on newest*
 
+- **Version status: nothing to upgrade to.** Vite+ has left alpha, but it
+  graduated *into the 0.2.x line we're already on* — there is no separate
+  "beta" to move to. npm dist-tags (checked 2026-07-15):
+  `latest = 0.2.4` (= our `^0.2.4` pin, installed), `alpha = 0.1.21-alpha.7`
+  (**stale**, points at an *older* 0.1.x than `latest`), no `beta` tag, and
+  nothing published newer than 0.2.4. So `vite-plus`,
+  `@voidzero-dev/vite-plus-core`, and the `vite` override are all current at
+  0.2.4; re-check when npm `latest` moves past 0.2.4.
 - `define` replacement was dropped on an incremental rebuild once
   (nondeterministic; caused the `__DEV_BUILD__` crash). Mitigated with
   `typeof` guards; consider reporting upstream with the repro attempt notes
@@ -181,9 +203,6 @@ Deliberately out of scope (not editable):
 - `vp lint`/`vp fmt` do **not** auto-discover `.oxlintrc.json`/`.oxfmtrc.json`
   — the `-c` flags in package.json scripts are load-bearing; keep them when
   touching scripts.
-- Revisit pinned versions when Vite+ leaves alpha (`vite-plus`,
-  `@voidzero-dev/vite-plus-core` at ^0.2.4; overrides map `vite` to the core
-  package).
 
 ## 8. Ideas parked (no commitment)
 
