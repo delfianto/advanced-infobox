@@ -1,11 +1,20 @@
-import { Notice, Plugin } from "obsidian";
+import { FuzzySuggestModal, Notice, Plugin, TFile, type App, type Editor } from "obsidian";
+import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
+import { TemplateRegistry } from "src/model/template-registry";
 import { DEFAULT_SETTINGS, sanitizeCssLength, type InfoboxSettings } from "src/settings/settings";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import "src/styles.css";
 
+// vite `define` replacement has proven unreliable on incremental watch
+// rebuilds (rolldown alpha drops it for re-transformed modules), so read the
+// injected constants defensively — a missing define must never crash onload.
+const BUILD_TIME = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "unknown";
+const DEV_BUILD = typeof __DEV_BUILD__ !== "undefined" ? __DEV_BUILD__ : false;
+
 export default class AdvancedInfoboxPlugin extends Plugin {
   settings: InfoboxSettings = { ...DEFAULT_SETTINGS };
+  readonly templates = new TemplateRegistry(this.app, () => this.settings.templateFolder);
 
   private readonly children = new Set<InfoboxRenderChild>();
   private styleEl: HTMLStyleElement | null = null;
@@ -18,8 +27,8 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
   async onload(): Promise<void> {
     // Proves which build Obsidian actually loaded; the toast is dev-only.
-    if (__DEV_BUILD__) new Notice(`Advanced Infobox build ${__BUILD_TIME__}`);
-    console.log(`[advanced-infobox] build ${__BUILD_TIME__}`);
+    if (DEV_BUILD) new Notice(`Advanced Infobox build ${BUILD_TIME}`);
+    console.log(`[advanced-infobox] build ${BUILD_TIME}`);
     await this.loadSettings();
 
     this.registerMarkdownCodeBlockProcessor("infobox", (source, el, ctx) => {
@@ -33,6 +42,55 @@ export default class AdvancedInfoboxPlugin extends Plugin {
         editor.replaceSelection("```infobox\n```\n");
       },
     });
+
+    this.addCommand({
+      id: "insert-infobox-with-template",
+      name: "Insert infobox with template",
+      editorCallback: (editor) => this.insertWithTemplate(editor),
+    });
+
+    this.addCommand({
+      id: "create-sample-templates",
+      name: "Create sample infobox templates",
+      callback: () => void this.createSampleTemplates(),
+    });
+
+    this.addCommand({
+      id: "add-template-properties",
+      name: "Add missing template properties to note",
+      checkCallback: (checking) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file) return false;
+        if (!checking) void this.addTemplateProperties(file);
+        return true;
+      },
+    });
+
+    // Editing a template note live-updates every open infobox using it.
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file) => {
+        if (this.templates.contains(file.path)) {
+          this.templates.invalidate(file.path);
+          this.refreshAll();
+        }
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (this.templates.contains(file.path) || this.templates.contains(oldPath)) {
+          this.templates.invalidate();
+          this.refreshAll();
+        }
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (this.templates.contains(file.path)) {
+          this.templates.invalidate();
+          this.refreshAll();
+        }
+      }),
+    );
 
     this.addSettingTab(new InfoboxSettingTab(this.app, this));
     this.applySettingsCss();
@@ -68,7 +126,104 @@ export default class AdvancedInfoboxPlugin extends Plugin {
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
     this.applySettingsCss();
+    this.templates.invalidate();
+    this.refreshAll();
+  }
+
+  refreshAll(): void {
     for (const child of this.children) child.refresh();
+  }
+
+  private insertWithTemplate(editor: Editor): void {
+    const ids = this.templates.ids();
+    if (ids.length === 0) {
+      new Notice(
+        `No templates found in ${this.templates.folder()}/. ` +
+          `Run "Create sample infobox templates" to get started.`,
+      );
+      return;
+    }
+    new TemplatePickerModal(this.app, ids, (id) => {
+      editor.replaceSelection("```infobox\ntemplate: " + id + "\n```\n");
+    }).open();
+  }
+
+  private async createSampleTemplates(): Promise<void> {
+    const folder = this.templates.folder();
+    // Create the folder chain level by level; createFolder rejects existing.
+    const parts = folder.split("/");
+    for (let i = 1; i <= parts.length; i++) {
+      const path = parts.slice(0, i).join("/");
+      if (!this.app.vault.getAbstractFileByPath(path)) {
+        await this.app.vault.createFolder(path).catch(() => {});
+      }
+    }
+
+    let created = 0;
+    for (const [id, content] of Object.entries(SAMPLE_TEMPLATES)) {
+      const path = `${folder}/${id}.md`;
+      if (this.app.vault.getAbstractFileByPath(path)) continue;
+      await this.app.vault.create(path, content);
+      created++;
+    }
+    new Notice(
+      created > 0
+        ? `Created ${created} sample template${created === 1 ? "" : "s"} in ${folder}/.`
+        : `All sample templates already exist in ${folder}/.`,
+    );
+  }
+
+  /**
+   * Scaffolds the template's keys into the active note's frontmatter via
+   * processFrontMatter (never touches the body). Notes without a template
+   * property get a picker, and the chosen id is written too.
+   */
+  private async addTemplateProperties(file: TFile): Promise<void> {
+    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
+      | Record<string, unknown>
+      | undefined;
+    const existing = fm?.[this.settings.templateKey];
+    const id = typeof existing === "string" && existing.trim() !== "" ? existing.trim() : null;
+
+    if (id) {
+      await this.scaffoldProperties(file, id, false);
+      return;
+    }
+    const ids = this.templates.ids();
+    if (ids.length === 0) {
+      new Notice(
+        `No templates found in ${this.templates.folder()}/. ` +
+          `Run "Create sample infobox templates" to get started.`,
+      );
+      return;
+    }
+    new TemplatePickerModal(this.app, ids, (picked) => {
+      void this.scaffoldProperties(file, picked, true);
+    }).open();
+  }
+
+  private async scaffoldProperties(file: TFile, id: string, setKey: boolean): Promise<void> {
+    const template = await this.templates.resolve(id);
+    if (!template) {
+      new Notice(`Template \`${id}\` not found in ${this.templates.folder()}/.`);
+      return;
+    }
+    const keys = [...new Set([...template.sections.flatMap((s) => s.keys), ...template.order])];
+    let added = 0;
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      if (setKey) frontmatter[this.settings.templateKey] = id;
+      const present = new Set(Object.keys(frontmatter).map((k) => k.toLowerCase()));
+      for (const key of keys) {
+        if (present.has(key.toLowerCase())) continue;
+        frontmatter[key] = "";
+        added++;
+      }
+    });
+    new Notice(
+      added > 0
+        ? `Added ${added} propert${added === 1 ? "y" : "ies"} from template \`${id}\`.`
+        : `Note already has every property of template \`${id}\`.`,
+    );
   }
 
   /**
@@ -97,5 +252,28 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       decls.push(`--aib-label-align: ${this.settings.labelAlign}`);
     }
     this.styleEl.textContent = decls.length > 0 ? `body { ${decls.join("; ")}; }` : "";
+  }
+}
+
+class TemplatePickerModal extends FuzzySuggestModal<string> {
+  constructor(
+    app: App,
+    private readonly templateIds: string[],
+    private readonly onPick: (id: string) => void,
+  ) {
+    super(app);
+    this.setPlaceholder("Pick an infobox template…");
+  }
+
+  getItems(): string[] {
+    return this.templateIds;
+  }
+
+  getItemText(id: string): string {
+    return id;
+  }
+
+  onChooseItem(id: string): void {
+    this.onPick(id);
   }
 }

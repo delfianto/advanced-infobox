@@ -180,7 +180,7 @@ Special keys (each remappable in settings): `title` (falls back to filename), `s
 #### Templates are markdown notes, editable in Obsidian itself
 
 A template is a regular note inside the **template folder** (a plugin setting with folder
-autocomplete; default `templates/infobox`). The note's basename is the template id:
+autocomplete; default `Templates/Infobox`). The note's basename is the template id:
 `infobox: person` resolves to `<template folder>/person.md`. Because templates are ordinary
 notes, they are edited with the normal Obsidian UI (including the Properties panel), sync with
 the vault, diff cleanly in git, and are shared by copying a file — no custom editor UI, no
@@ -389,13 +389,17 @@ own preview containers, too invasive; "Insert infobox" command (block-option edi
 suggestion deferred to Phase 4 polish). The plugin settings stylesheet emits only
 non-default values, so untouched settings remain fully drivable from Style Settings.
 
-**Phase 3 — Markdown templates**
-Template registry (scan configured folder, resolve `infobox:` property → template note, watch
-edits/renames/deletes); frontmatter label map + body section parsing (cache-based); template
-folder setting with autocomplete; sample templates shipped as markdown notes (person, place,
-organization, character) created on demand by a command; "Insert infobox with template" and
-"Add missing template properties to note" commands (the latter scaffolds keys via
-`fileManager.processFrontMatter`).
+**Phase 3 — Markdown templates** *(shipped)*
+Template registry (lazy parse + cache keyed by id, invalidated on template-folder
+changes/renames/deletes; editing a template live-updates every open infobox); pure
+cache-based template parser (frontmatter labels + order, body headings/list items by offset,
+`- key: Label` overrides, reserved `unlisted` key, wikilinked keys unwrapped); precedence:
+block sections > template body sections > template frontmatter order > zero-config, and
+block `unlisted` > template `unlisted`; template folder + template property settings with
+folder autocomplete; sample templates (person, place, organization, character) created on
+demand by a command; "Insert infobox with template" (fuzzy picker) and "Add missing template
+properties to note" (scaffolds keys via `fileManager.processFrontMatter`, offering a picker
+and writing the template property when the note has none).
 
 **Phase 4 — Polish & release**
 Optional auto-embed mode (render at top of note without an anchor — CM6 widget below

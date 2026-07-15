@@ -1,4 +1,5 @@
 import type { BlockConfig } from "src/model/block-config";
+import type { InfoboxTemplate } from "src/model/template";
 import type { InfoboxSettings } from "src/settings/settings";
 import {
   asDisplayString,
@@ -46,10 +47,12 @@ export interface ViewModelInput {
   fileBasename: string;
   settings: InfoboxSettings;
   blockConfig: BlockConfig;
+  /** Resolved template note, when the note (or block) names one. */
+  template?: InfoboxTemplate | null;
 }
 
 export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
-  const { frontmatter, fileBasename, settings, blockConfig } = input;
+  const { frontmatter, fileBasename, settings, blockConfig, template } = input;
 
   if (!frontmatter || Object.keys(frontmatter).length === 0) {
     return {
@@ -65,15 +68,20 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     settings.subtitleKey,
     settings.imageKey,
     settings.captionKey,
+    settings.templateKey,
     "tags",
   ]);
   const excluded = new Set(
     [...settings.excludeKeys, ...(blockConfig.exclude ?? [])].map((k) => k.toLowerCase()),
   );
 
+  // Template labels are more specific than the global map, so they win.
   const labelOverrides = new Map(
     Object.entries(settings.labelMap).map(([k, v]) => [k.toLowerCase(), v]),
   );
+  for (const [k, v] of Object.entries(template?.labels ?? {})) {
+    labelOverrides.set(k.toLowerCase(), v);
+  }
   const labelFor = (key: string): string =>
     labelOverrides.get(key.toLowerCase()) ?? prettifyKey(key);
 
@@ -102,8 +110,20 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     return undefined;
   };
 
+  // Structure precedence: per-note block > template body sections >
+  // template frontmatter order > zero-config (single unlabeled section).
+  let sectionSpecs: Array<{ label?: string; keys: string[] }> | undefined = blockConfig.sections;
+  if (!sectionSpecs && template) {
+    if (template.sections.length > 0) {
+      sectionSpecs = template.sections;
+    } else if (template.order.length > 0) {
+      sectionSpecs = [{ keys: template.order }];
+    }
+  }
+  const unlisted = blockConfig.unlisted ?? template?.unlisted ?? "show";
+
   const sections: InfoboxSection[] = [];
-  for (const spec of blockConfig.sections ?? []) {
+  for (const spec of sectionSpecs ?? []) {
     const fields: InfoboxField[] = [];
     for (const wanted of spec.keys) {
       const field = takeField(wanted);
@@ -114,7 +134,7 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     if (fields.length > 0) sections.push({ label: spec.label, fields });
   }
 
-  if (pool.size > 0 && blockConfig.unlisted !== "hide") {
+  if (pool.size > 0 && unlisted !== "hide") {
     sections.push({ fields: [...pool.values()] });
   }
 

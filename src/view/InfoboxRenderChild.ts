@@ -18,9 +18,12 @@ import type AdvancedInfoboxPlugin from "src/main";
  */
 export class InfoboxRenderChild extends MarkdownRenderChild {
   private blockConfig: BlockConfig = {};
+  private blockErrors: string[] = [];
   private readonly model = new InfoboxModel();
   private component: Record<string, unknown> | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  /** Refresh is async (template resolution reads files); last one wins. */
+  private refreshSeq = 0;
 
   constructor(
     containerEl: HTMLElement,
@@ -36,6 +39,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
     const { config, errors } = parseBlockConfig(this.source);
     this.blockConfig = config;
+    this.blockErrors = errors;
     this.model.errors = errors;
     this.model.collapsed = this.plugin.initialCollapsed(this.sourcePath);
     this.refresh();
@@ -75,6 +79,13 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
   /** Recomputes the view model; also called by the plugin on settings changes. */
   refresh(): void {
+    void this.refreshAsync();
+  }
+
+  private async refreshAsync(): Promise<void> {
+    const seq = ++this.refreshSeq;
+    const settings = this.plugin.settings;
+
     const file = this.plugin.app.vault.getAbstractFileByPath(this.sourcePath);
     const frontmatter =
       file instanceof TFile
@@ -83,15 +94,35 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
             | undefined)
         : undefined;
 
+    // Template: per-note block option beats the flat frontmatter property.
+    const warnings: string[] = [];
+    const templateId =
+      this.blockConfig.template ??
+      (typeof frontmatter?.[settings.templateKey] === "string"
+        ? (frontmatter[settings.templateKey] as string).trim()
+        : undefined);
+    let template = null;
+    if (templateId) {
+      template = await this.plugin.templates.resolve(templateId);
+      if (!template) {
+        warnings.push(
+          `Template \`${templateId}\` not found in ${this.plugin.templates.folder()}/ — rendering without it.`,
+        );
+      }
+    }
+    if (seq !== this.refreshSeq) return; // superseded by a newer refresh
+
     this.model.vm = buildViewModel({
       frontmatter,
       fileBasename: file instanceof TFile ? file.basename : this.sourcePath,
-      settings: this.plugin.settings,
+      settings,
       blockConfig: this.blockConfig,
+      template,
     });
-    this.model.arrayStyle = this.plugin.settings.arrayStyle;
-    this.model.booleanStyle = this.plugin.settings.booleanStyle;
-    this.model.collapsible = this.plugin.settings.lpCollapse !== "off";
+    this.model.errors = [...this.blockErrors, ...warnings];
+    this.model.arrayStyle = settings.arrayStyle;
+    this.model.booleanStyle = settings.booleanStyle;
+    this.model.collapsible = settings.lpCollapse !== "off";
     this.applyContainerClasses();
   }
 
