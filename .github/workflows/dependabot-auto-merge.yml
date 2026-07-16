@@ -1,0 +1,31 @@
+name: Dependabot auto-merge
+
+# Auto-merges Dependabot PRs (non-major only) once required checks pass.
+#
+# Requires, one-time, in repo Settings:
+#   - "Allow auto-merge" enabled (Settings → General → Pull Requests).
+#   - A branch protection / ruleset on `main` that requires the "ci" check,
+#     so --auto waits for CI instead of merging immediately.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch update metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for non-major updates
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

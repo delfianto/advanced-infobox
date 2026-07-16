@@ -1,0 +1,77 @@
+name: Release on dependency update
+
+# When a dependency update lands on main (a merged Dependabot npm PR changes
+# bun.lock), auto-bump the patch version and cut a release. Self-contained: it
+# bumps the version, commits "Release X.Y.Z", builds, and publishes — so it does
+# not rely on release.yml re-triggering (a GITHUB_TOKEN push would not).
+#
+# Skips its own "Release ..." commits (loop guard) and any push that does not
+# touch bun.lock (docs, code, github-actions bumps → no plugin release).
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ !startsWith(github.event.head_commit.message, 'Release ') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Did this push change dependencies?
+        id: deps
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -qxF 'bun.lock'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No bun.lock change; nothing to release."
+          fi
+
+      - name: Bump patch version
+        if: steps.deps.outputs.changed == 'true'
+        id: bump
+        run: |
+          cur=$(jq -r .version manifest.json)
+          minapp=$(jq -r .minAppVersion manifest.json)
+          new=$(echo "$cur" | awk -F. '{ printf "%d.%d.%d", $1, $2, $3 + 1 }')
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+          tmp=$(mktemp) && jq --arg v "$new" '.version = $v' manifest.json > "$tmp" && mv "$tmp" manifest.json
+          tmp=$(mktemp) && jq --arg v "$new" '.version = $v' package.json > "$tmp" && mv "$tmp" package.json
+          tmp=$(mktemp) && jq --arg v "$new" --arg m "$minapp" '. + {($v): $m}' versions.json > "$tmp" && mv "$tmp" versions.json
+
+      - name: Commit and push the release bump
+        if: steps.deps.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Release ${{ steps.bump.outputs.new }}"
+          git push
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.deps.outputs.changed == 'true'
+
+      - name: Install dependencies
+        if: steps.deps.outputs.changed == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        if: steps.deps.outputs.changed == 'true'
+        run: bun run build
+
+      - name: Create GitHub release
+        if: steps.deps.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.bump.outputs.new }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$(git rev-parse HEAD)" \
+            --title "${{ steps.bump.outputs.new }}" \
+            --generate-notes \
+            dist/main.js dist/manifest.json dist/styles.css
