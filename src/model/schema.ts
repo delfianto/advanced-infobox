@@ -1,5 +1,6 @@
 import {
   asDisplayString,
+  asDisplayStringList,
   classifyValue,
   type FieldValue,
   normalizeTags,
@@ -11,14 +12,15 @@ import { type InfoboxTemplate } from "src/model/template";
 
 /**
  * The renderable shape of an infobox, derived from a note's flat frontmatter.
- * Pure data: image is carried as its *raw* frontmatter spec (wikilink, vault
- * path, or URL) and resolved to a resource URL by the view layer, keeping
- * this module free of the Obsidian runtime.
+ * Pure data: images are carried as their *raw* frontmatter specs (wikilink,
+ * vault path, or URL) and resolved to resource URLs by the view layer, keeping
+ * this module free of the Obsidian runtime. `images` is empty when the note has
+ * no image; a single image is just a one-item list.
  */
 export interface InfoboxViewModel {
   title: string;
   subtitle?: string;
-  image?: string;
+  images: string[];
   caption?: string;
   tags: string[];
   /**
@@ -57,6 +59,7 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
   if (!frontmatter || Object.keys(frontmatter).length === 0) {
     return {
       title: fileBasename,
+      images: [],
       tags: [],
       sections: [],
       bare: true,
@@ -141,7 +144,7 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
   return {
     title: asDisplayString(frontmatter[settings.titleKey]) ?? fileBasename,
     subtitle: asDisplayString(frontmatter[settings.subtitleKey]),
-    image: blockConfig.image ?? asDisplayString(frontmatter[settings.imageKey]),
+    images: asDisplayStringList(blockConfig.image ?? frontmatter[settings.imageKey]),
     caption: blockConfig.caption ?? asDisplayString(frontmatter[settings.captionKey]),
     tags: settings.showTags ? normalizeTags(frontmatter["tags"]) : [],
     sections,

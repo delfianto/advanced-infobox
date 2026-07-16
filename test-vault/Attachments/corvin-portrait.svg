@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="620" viewBox="0 0 480 620">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7a1f2e" />
+      <stop offset="42%" stop-color="#3d0f1c" />
+      <stop offset="100%" stop-color="#08040a" />
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe9c9" />
+      <stop offset="60%" stop-color="#f3c98a" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#f3c98a" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd27a" />
+      <stop offset="100%" stop-color="#ff5a1c" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="480" height="620" fill="url(#sky)" />
+
+  <circle cx="336" cy="150" r="86" fill="url(#halo)" />
+  <circle cx="336" cy="150" r="44" fill="#ffeccb" opacity="0.95" />
+
+  <g fill="#ffb056">
+    <circle cx="110" cy="250" r="3" opacity="0.8" />
+    <circle cx="150" cy="336" r="2" opacity="0.55" />
+    <circle cx="86" cy="420" r="2.6" opacity="0.7" />
+    <circle cx="404" cy="300" r="2" opacity="0.6" />
+    <circle cx="420" cy="410" r="3.2" opacity="0.45" />
+    <circle cx="60" cy="332" r="1.6" opacity="0.5" />
+    <circle cx="372" cy="214" r="1.8" opacity="0.5" />
+  </g>
+
+  <path fill="#0b050a" d="M212 288 C192 258 178 214 188 178 C179 214 198 262 226 292 Z" />
+  <path fill="#0b050a" d="M268 288 C288 258 302 214 292 178 C301 214 282 262 254 292 Z" />
+
+  <path fill="#0b050a" d="M116 620 L150 456 C156 422 178 404 204 394
+    C176 374 168 322 192 290 C206 252 274 252 288 290 C312 322 304 374 276 394
+    C302 404 324 422 330 456 L364 620 Z" />
+
+  <circle cx="220" cy="350" r="10" fill="url(#eye)" />
+  <circle cx="260" cy="350" r="10" fill="url(#eye)" />
+  <circle cx="220" cy="350" r="3" fill="#ffd27a" />
+  <circle cx="260" cy="350" r="3" fill="#ffd27a" />
+
+  <rect x="12" y="12" width="456" height="596" rx="6" fill="none" stroke="#caa25e" stroke-opacity="0.5" stroke-width="1.5" />
+
+  <text x="240" y="560" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="33" fill="#f3e6d0">Corvin Ashthorne</text>
+  <text x="240" y="589" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" fill="#e2a0a0" opacity="0.9">Warlock · Pact of the Fiend</text>
+</svg>

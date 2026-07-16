@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type InfoboxModel, type RenderContext } from "src/view/infobox-state.svelte";
   import { isEditableValue, listItemText, parseNumberInput } from "src/model/edit";
+  import Carousel from "src/view/Carousel.svelte";
   import { type FieldValue } from "src/model/values";
   import { type InfoboxField } from "src/model/schema";
   import ListEditor from "src/view/ListEditor.svelte";
@@ -182,15 +183,10 @@
       <div class="aib-subtitle">{@render md(vm.subtitle)}</div>
     {/if}
 
-    {#if vm.image}
-      {@const src = ctx.resolveImage(vm.image)}
-      {#if src}
-        <div class="aib-image">
-          <img {src} alt={vm.caption ?? vm.title} />
-        </div>
-      {:else}
-        <div class="aib-image-missing">Image not found: {vm.image}</div>
-      {/if}
+    {#if vm.images.length > 0}
+      {#key JSON.stringify(vm.images)}
+        <Carousel images={vm.images} alt={vm.caption ?? vm.title} {ctx} />
+      {/key}
     {/if}
 
     {#if vm.caption}

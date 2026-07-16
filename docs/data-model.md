@@ -27,10 +27,40 @@ These map to parts of the header, and never appear as ordinary fields. Each is
 | --- | --- |
 | Title (falls back to the filename) | `title` |
 | Subtitle under the title | `subtitle` |
-| Image (wikilink, vault path, or URL) | `image` |
+| Image — one, or a list for a carousel (wikilink, vault path, or URL) | `image` |
 | Caption under the image | `caption` |
 | Tags row at the foot of the box | `tags` |
 | [Template](templates.md) selector | `infobox` |
+
+### Images and the carousel
+
+`image` takes a single image **or a YAML list** of them:
+
+```yaml
+image:
+  - "[[cover.png]]"
+  - "[[in-profile.png]]"
+  - "https://example.com/portrait.jpg"
+```
+
+- A single image (or a one-item list) renders just as before.
+- Two or more turn the header into a **carousel**: hover for previous / next
+  chevrons and a slide counter in the corner. Order follows the list.
+- Clicking any image opens a **lightbox** — a full-size viewer with
+  first / previous / next / last controls (also arrow keys, `Home` / `End`, and
+  `Esc` to close).
+- Tall or oversized images are capped at `--aib-image-max-height` (default
+  `20em`) so they never stretch the card — [theme it](theming.md) to taste.
+
+![A character infobox whose header is a three-image carousel: a hover chevron and a "1 / 3" slide counter sit over the current image.](images/multi-image-carousel.png)
+
+Clicking any image opens the lightbox — a full-size viewer on a dimmed backdrop:
+
+![The lightbox showing one image full-size with first, previous, next, and last controls beneath it.](images/multi-image-lightbox.png)
+
+A list is still flat frontmatter, so it stays the single source of truth: reorder,
+add, or remove images from the note's properties and the box follows. (A
+per-note [`image` block option](block-options.md) sets one image, not a list.)
 
 ## How values render
 

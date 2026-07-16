@@ -29,6 +29,8 @@ export interface RenderContext {
   renderMarkdown: (markdown: string, el: HTMLElement) => void;
   /** Raw image spec (wikilink / vault path / URL) → resource URL, or null. */
   resolveImage: (raw: string) => string | null;
+  /** Opens the full-size lightbox at `index` over the given raw image specs. */
+  openLightbox: (images: string[], index: number) => void;
   /** ISO date string → user-formatted date (settings.dateFormat). */
   formatDate: (iso: string) => string;
   /** Remembers the user's collapse toggle across CM6 widget remounts. */

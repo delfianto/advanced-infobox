@@ -22,7 +22,7 @@ few **presentation-only** options for overrides that should apply to *this note 
 | --- | --- | --- |
 | `placement` | `right` \| `left` \| `full` | Where the box floats in Reading view, overriding the global setting for this note. |
 | `exclude` | list of keys | Hide these frontmatter keys in this note (added to the global excluded list). |
-| `image` | string | Override the image property (a wikilink, vault path, or URL) for this note. |
+| `image` | string | Override the image property (a wikilink, vault path, or URL) for this note. This sets a single image; a [list of images](data-model.md#images-and-the-carousel) for the carousel comes from frontmatter. |
 | `caption` | string | Override the caption shown under the image. |
 | `sections` | map of `Label: [keys]` | Group fields into wiki-style header rows (see below). |
 | `unlisted` | `show` \| `hide` | What to do with keys no section names. Default `show` (they land in a trailing unlabeled group). |

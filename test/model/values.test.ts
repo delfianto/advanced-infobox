@@ -1,4 +1,10 @@
-import { asDisplayString, classifyValue, normalizeTags, prettifyKey } from "src/model/values";
+import {
+  asDisplayString,
+  asDisplayStringList,
+  classifyValue,
+  normalizeTags,
+  prettifyKey,
+} from "src/model/values";
 import { describe, expect, it } from "vitest";
 
 describe("prettifyKey", () => {
@@ -133,5 +139,36 @@ describe("asDisplayString", () => {
 
   it("returns undefined for objects", () => {
     expect(asDisplayString({ nested: true })).toBeUndefined();
+  });
+});
+
+describe("asDisplayStringList", () => {
+  it("wraps a single non-empty string in a one-item list", () => {
+    expect(asDisplayStringList(" Albert ")).toEqual(["Albert"]);
+  });
+
+  it("returns every string of a list in order, dropping blanks", () => {
+    expect(asDisplayStringList(["[[a.png]]", "  ", "[[b.png]]"])).toEqual([
+      "[[a.png]]",
+      "[[b.png]]",
+    ]);
+  });
+
+  it("preserves wikilink, embed, and alias syntax verbatim", () => {
+    expect(asDisplayStringList(["![[a.png]]", "[[b.png|thumb]]"])).toEqual([
+      "![[a.png]]",
+      "[[b.png|thumb]]",
+    ]);
+  });
+
+  it("returns an empty array for null, undefined, blank strings, and objects", () => {
+    expect(asDisplayStringList(null)).toEqual([]);
+    expect(asDisplayStringList(undefined)).toEqual([]);
+    expect(asDisplayStringList("   ")).toEqual([]);
+    expect(asDisplayStringList({ nested: true })).toEqual([]);
+  });
+
+  it("flattens nested lists and stringifies scalars", () => {
+    expect(asDisplayStringList([["a"], 7, true])).toEqual(["a", "7", "true"]);
   });
 });

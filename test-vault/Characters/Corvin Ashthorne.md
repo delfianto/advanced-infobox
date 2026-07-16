@@ -2,6 +2,10 @@
 title: Corvin Ashthorne
 subtitle: Level 7 Tiefling Warlock
 caption: Pact of the Fiend
+image:
+  - "[[corvin-portrait.svg]]"
+  - "[[corvin-sigil.svg]]"
+  - "[[corvin-vista.svg]]"
 infobox: dnd
 race: "[[Tiefling]]"
 class: "[[Warlock]]"

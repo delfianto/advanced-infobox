@@ -7,6 +7,7 @@ import { createMarkdownRenderer } from "src/view/markdown";
 import { type EditableValue } from "src/model/edit";
 import Infobox from "src/view/Infobox.svelte";
 import { InfoboxModel } from "src/view/infobox-state.svelte";
+import { LightboxModal } from "src/view/LightboxModal";
 
 /**
  * One rendered infobox widget. Created by the code block processor for both
@@ -73,6 +74,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
             this.renderTasks.push(this.renderMd(markdown, el));
           },
           resolveImage: (raw: string) => this.resolveImage(raw),
+          openLightbox: (images: string[], index: number) => this.openLightbox(images, index),
           formatDate: (iso: string) => this.formatDate(iso),
           persistCollapse: (collapsed: boolean) =>
             this.plugin.rememberCollapsed(this.sourcePath, collapsed),
@@ -253,5 +255,11 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     if (/^https?:\/\//iu.test(src)) return src;
     const file = this.plugin.app.metadataCache.getFirstLinkpathDest(src, this.sourcePath);
     return file ? this.plugin.app.vault.getResourcePath(file) : null;
+  }
+
+  /** Snapshots the specs to resource URLs (null when missing) and opens the viewer. */
+  private openLightbox(images: string[], index: number): void {
+    const urls = images.map((spec) => this.resolveImage(spec));
+    new LightboxModal(this.plugin.app, urls, index).open();
   }
 }
