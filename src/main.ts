@@ -326,7 +326,8 @@ export default class AdvancedInfoboxPlugin extends Plugin {
         tally.set(id.trim(), (tally.get(id.trim()) ?? 0) + 1);
       }
       const image = fm[this.settings.imageKey];
-      if (typeof image === "string" && image.trim() !== "") hasImages = true;
+      const imageList = Array.isArray(image) ? image : [image];
+      if (imageList.some((v) => typeof v === "string" && v.trim() !== "")) hasImages = true;
       for (const key of Object.keys(fm)) if (!special.has(key.toLowerCase())) seen.add(key);
     }
     const templateId = [...tally].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? null;

@@ -42,6 +42,10 @@ Settings.
 > table styling (looking at you, AnuPpuccin). They still read from the `--aib-*` variables,
 > so every override path above continues to work.
 
+Images (single or the [multi-image carousel](data-model.md#images-and-the-carousel)) are
+capped at `--aib-image-max-height` (default `20em`) so a tall or oversized image never
+balloons the card. Adjust it under Style Settings → Image max height, or in a snippet.
+
 ## Live Preview vs Reading view
 
 A theming reminder that's really an architecture note: Reading view floats the box and wraps

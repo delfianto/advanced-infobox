@@ -87,3 +87,15 @@ export function asDisplayString(raw: unknown): string | undefined {
   if (raw instanceof Date) return raw.toISOString().slice(0, 10);
   return undefined;
 }
+
+/**
+ * Every string-ish scalar out of a frontmatter value, in order. A lone scalar
+ * yields a one-item list; a list yields all its renderable items (nested lists
+ * flattened, blanks dropped). Wikilink/embed syntax is preserved verbatim —
+ * bracket and alias stripping is the view's job.
+ */
+export function asDisplayStringList(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.flatMap((item) => asDisplayStringList(item));
+  const single = asDisplayString(raw);
+  return single === undefined ? [] : [single];
+}

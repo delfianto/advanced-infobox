@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+  <defs>
+    <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8f2733" />
+      <stop offset="46%" stop-color="#4a1220" />
+      <stop offset="100%" stop-color="#140812" />
+    </linearGradient>
+    <radialGradient id="halo2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffddb0" />
+      <stop offset="70%" stop-color="#ffddb0" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffddb0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="720" height="420" fill="url(#sky2)" />
+
+  <circle cx="546" cy="118" r="82" fill="url(#halo2)" />
+  <circle cx="546" cy="118" r="42" fill="#ffe6c4" opacity="0.95" />
+
+  <g fill="#ffb056" opacity="0.7">
+    <circle cx="120" cy="150" r="2.4" />
+    <circle cx="250" cy="90" r="1.8" />
+    <circle cx="360" cy="160" r="2.2" />
+    <circle cx="470" cy="70" r="1.6" />
+    <circle cx="640" cy="180" r="2.4" />
+  </g>
+
+  <path fill="#1a0c14" opacity="0.7" d="M0 300 L80 250 L140 285 L220 228 L300 280 L360 244 L440 288 L520 248 L600 286 L680 250 L720 300 L720 420 L0 420 Z" />
+  <path fill="#0a0509" d="M0 360 L120 300 L200 346 L300 284 L380 340 L480 300 L560 350 L660 304 L720 350 L720 420 L0 420 Z" />
+  <path fill="#0a0509" d="M298 420 L316 196 L330 262 L344 208 L362 420 Z" />
+
+  <text x="360" y="392" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="19" letter-spacing="2" fill="#f0d9c0" opacity="0.92">Ashthorne Reach at duskfall</text>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="540" viewBox="0 0 540 540">
+  <defs>
+    <radialGradient id="dark" cx="50%" cy="46%" r="62%">
+      <stop offset="0%" stop-color="#2c0f1a" />
+      <stop offset="100%" stop-color="#09040a" />
+    </radialGradient>
+  </defs>
+
+  <rect width="540" height="540" fill="url(#dark)" />
+
+  <g fill="none" stroke="#d9a85a">
+    <circle cx="270" cy="270" r="204" stroke-width="2" opacity="0.9" />
+    <circle cx="270" cy="270" r="188" stroke-width="6" stroke-dasharray="3 13" opacity="0.75" />
+    <circle cx="270" cy="270" r="150" stroke-width="1.2" opacity="0.55" />
+    <circle cx="270" cy="270" r="92" stroke-width="1.5" opacity="0.8" />
+    <polygon points="270,120 358.2,391.4 127.3,223.6 412.7,223.6 181.8,391.4" stroke-width="2.2" stroke-linejoin="round" opacity="0.95" />
+  </g>
+
+  <g fill="#e6b85f" opacity="0.85">
+    <circle cx="270" cy="120" r="4.5" />
+    <circle cx="412.7" cy="223.6" r="4.5" />
+    <circle cx="358.2" cy="391.4" r="4.5" />
+    <circle cx="181.8" cy="391.4" r="4.5" />
+    <circle cx="127.3" cy="223.6" r="4.5" />
+  </g>
+
+  <circle cx="270" cy="270" r="15" fill="#e6b85f" />
+  <circle cx="270" cy="270" r="7" fill="#3a1220" />
+
+  <text x="270" y="516" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="21" letter-spacing="4" fill="#e9cfa0">THE FIEND'S CONTRACT</text>
+</svg>

@@ -47,7 +47,7 @@ describe("buildViewModel", () => {
     expect(vm.bare).toBe(false);
     expect(vm.title).toBe("Albert Einstein");
     expect(vm.subtitle).toBe("Theoretical physicist");
-    expect(vm.image).toBe("[[einstein-1921.jpg]]");
+    expect(vm.images).toEqual(["[[einstein-1921.jpg]]"]);
     expect(vm.caption).toBe("Photograph from 1921");
     expect(vm.tags).toEqual(["science", "physics"]);
     expect(vm.sections).toHaveLength(1);
@@ -102,8 +102,18 @@ describe("buildViewModel", () => {
         blockConfig: { image: "override.png", caption: "from block" },
       }),
     );
-    expect(vm.image).toBe("override.png");
+    expect(vm.images).toEqual(["override.png"]);
     expect(vm.caption).toBe("from block");
+  });
+
+  it("collects a list-valued image property into images, in order", () => {
+    const vm = buildViewModel(input({ frontmatter: { image: ["[[a.png]]", "[[b.png]]"] } }));
+    expect(vm.images).toEqual(["[[a.png]]", "[[b.png]]"]);
+  });
+
+  it("yields an empty images array when the note has no image", () => {
+    const vm = buildViewModel(input({ frontmatter: { born: "1879" } }));
+    expect(vm.images).toEqual([]);
   });
 
   it("drops empty values instead of rendering blank rows", () => {

@@ -53,6 +53,10 @@ settings:
     title: Image corner radius
     type: variable-text
     default: 4px
+  - id: aib-image-max-height
+    title: Image max height
+    type: variable-text
+    default: 20em
   - id: aib-heading-typography
     title: Typography
     type: heading
@@ -313,6 +317,7 @@ settings:
 /* ── Image ─────────────────────────────────────────────────── */
 
 .aib-image {
+  position: relative;
   text-align: center;
   padding: calc(0.5em * var(--aib-pad, 1)) 0.6em;
   border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
@@ -320,19 +325,123 @@ settings:
 
 .aib-image img {
   max-width: 100%;
+  max-height: var(--aib-image-max-height, 20em);
   height: auto;
+  width: auto;
   display: block;
   margin: 0 auto;
   border-radius: var(--aib-image-radius, 4px);
 }
 
+/* A transparent overlay button so clicking (or Enter/Space) the image opens the
+   lightbox. It covers the image rather than wrapping it, so the image sizes the
+   row normally — a lone image looks exactly as before, just clickable. `all:
+   unset` (scoped like .aib-title-btn) neutralizes the theme's button background,
+   which otherwise paints an opaque fill over the image. */
+.aib-infobox .aib-image-open {
+  all: unset;
+  position: absolute;
+  inset: 0;
+  cursor: zoom-in;
+}
+
+.aib-infobox .aib-image-open:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--background-modifier-border-focus, #7aa2f7);
+}
+
+/* Multi-image: a fixed-height frame keeps every slide the same size (no layout
+   jump between differently-shaped images); the image is letterboxed inside it. */
+.aib-carousel img {
+  width: 100%;
+  height: var(--aib-image-max-height, 20em);
+  max-height: none;
+  object-fit: contain;
+}
+
+.aib-carousel .aib-image-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--aib-image-max-height, 20em);
+}
+
+/* Glyph-only chevrons: no solid pill. Scoped under .aib-infobox so it outranks
+   the theme's `.markdown-preview-view button` background (which otherwise paints
+   an opaque pill). A dark text-shadow halo keeps the white glyph legible over
+   any image or letterbox in either theme, and a faint backdrop blur adds a
+   subtle frosted-glass lift. */
+.aib-infobox .aib-carousel-nav {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 1.9em;
+  padding: 0;
+  font-size: 1.9em;
+  line-height: 1;
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.8),
+    0 0 3px rgba(0, 0, 0, 0.55);
+  transition: opacity 120ms ease;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.aib-carousel-prev {
+  left: 0.5em;
+}
+
+.aib-carousel-next {
+  right: 0.5em;
+}
+
+/* Reveal on hover/keyboard focus; a disabled arrow (at either end) stays hidden. */
+.aib-carousel:hover .aib-carousel-nav:not(:disabled),
+.aib-carousel:focus-within .aib-carousel-nav:not(:disabled) {
+  opacity: 1;
+}
+
+.aib-carousel-nav:disabled {
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Touch has no hover, so keep the usable arrows visible there. */
+@media (pointer: coarse) {
+  .aib-carousel .aib-carousel-nav:not(:disabled) {
+    opacity: 1;
+  }
+}
+
+.aib-image-counter {
+  position: absolute;
+  right: 0.6em;
+  bottom: 0.6em;
+  padding: 0.1em 0.5em;
+  font-size: 0.75em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
 .aib-image-missing {
   text-align: center;
-  padding: calc(0.5em * var(--aib-pad, 1)) 0.8em;
   font-style: italic;
   font-size: 0.9em;
   color: var(--text-faint);
-  border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
 }
 
 .aib-caption {
@@ -341,6 +450,81 @@ settings:
   font-style: italic;
   color: var(--aib-muted-color, var(--text-muted));
   padding: 0 0.8em calc(0.5em * var(--aib-pad, 1));
+}
+
+/* ── Lightbox ──────────────────────────────────────────────── */
+
+/* Full-size image viewer: an Obsidian Modal with .aib-lightbox on its modalEl.
+   It keeps the theme's solid modal panel (so the viewer reads as a real UI
+   element, not a floating image) and only overrides its size. */
+.modal.aib-lightbox {
+  width: auto;
+  max-width: 95vw;
+  max-height: 95vh;
+  padding: 1.5em;
+}
+
+/* Dim the note behind hard — a lightbox is about the image, not the page under
+   it (the class is added to the modal container in LightboxModal.onOpen). */
+.aib-lightbox-container .modal-bg {
+  background-color: #000;
+  opacity: 0.85;
+}
+
+.aib-lightbox-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75em;
+}
+
+.aib-lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--aib-image-radius, 4px);
+}
+
+.aib-lightbox-missing {
+  padding: 3em;
+  font-style: italic;
+  color: var(--text-faint);
+}
+
+.aib-lightbox-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+/* Glyph-only controls on the modal panel — `all: unset` strips every bit of the
+   theme's button chrome (background, border, and the raised box-shadow), leaving
+   just the theme-coloured symbol. */
+.aib-lightbox .aib-lightbox-btn {
+  all: unset;
+  cursor: pointer;
+  padding: 0 0.15em;
+  font-size: 1.7em;
+  line-height: 1;
+  color: var(--text-normal);
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+
+.aib-lightbox .aib-lightbox-btn:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.aib-lightbox .aib-lightbox-btn:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.aib-lightbox-counter {
+  min-width: 4em;
+  text-align: center;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Fields ────────────────────────────────────────────────── */
