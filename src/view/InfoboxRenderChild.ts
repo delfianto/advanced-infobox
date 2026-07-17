@@ -168,6 +168,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
     // caller awaiting `rendered` (PDF export) sees a fully-populated box.
     await tick();
     await Promise.allSettled(this.renderTasks);
+    this.plugin.wideNotes.recompute(this.containerEl);
   }
 
   private beginEdit(): void {

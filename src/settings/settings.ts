@@ -59,6 +59,14 @@ export interface InfoboxSettings {
    * as its full infobox (a gallery of cards). Opt-in; needs Obsidian 1.10+.
    */
   basesInfoboxView: boolean;
+  /**
+   * Override Obsidian's global "Readable line length" for notes that contain
+   * an infobox or an embedded Base — both read better full-width than
+   * clamped to prose width. Leaves ordinary notes alone.
+   */
+  wideNotes: boolean;
+  /** CSS length cap for wide notes; empty = fully unconstrained (edge-to-edge). */
+  wideNoteWidth: string;
 }
 
 export const DEFAULT_SETTINGS: InfoboxSettings = {
@@ -86,6 +94,8 @@ export const DEFAULT_SETTINGS: InfoboxSettings = {
   templateFolder: "Templates/Infobox",
   basesHoverPreview: true,
   basesInfoboxView: false,
+  wideNotes: true,
+  wideNoteWidth: "",
 };
 
 export const PLACEMENTS: readonly Placement[] = ["right", "left", "full"];
