@@ -171,6 +171,45 @@ export class InfoboxSettingTab extends PluginSettingTab {
           }),
       );
 
+    // ── Readable line length ──────────────────────────────────────
+
+    new Setting(containerEl).setName("Readable line length").setHeading();
+    containerEl.createEl("p", {
+      cls: "setting-item-description",
+      text:
+        "Obsidian's “Readable line length” editor setting is all-or-nothing across the whole " +
+        "vault. This widens just the notes that need it instead.",
+    });
+
+    new Setting(containerEl)
+      .setName("Widen infobox and Base notes")
+      .setDesc(
+        "Override readable line length for any note that contains an infobox or an embedded " +
+          "Base — both read better full-width than clamped to prose width. Ordinary notes are " +
+          "unaffected. Base-embed detection is best-effort (reads Bases' rendered markup).",
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.wideNotes).onChange(async (value) => {
+          this.plugin.settings.wideNotes = value;
+          await this.plugin.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
+      .setName("Wide note width")
+      .setDesc(
+        "CSS length to cap wide notes at (e.g. 60em). Empty = fully unconstrained, edge-to-edge.",
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("unconstrained")
+          .setValue(this.plugin.settings.wideNoteWidth)
+          .onChange(async (value) => {
+            this.plugin.settings.wideNoteWidth = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
     // ── Field display ──────────────────────────────────────────
 
     new Setting(containerEl).setName("Field display").setHeading();

@@ -1,22 +1,14 @@
 import "src/styles.css";
-import {
-  debounce,
-  type Editor,
-  normalizePath,
-  Notice,
-  Plugin,
-  stringifyYaml,
-  TFile,
-} from "obsidian";
+import { debounce, type Editor, normalizePath, Notice, Plugin, type TFile } from "obsidian";
 import { DEFAULT_SETTINGS, type InfoboxSettings, sanitizeCssLength } from "src/settings/settings";
 import { INFOBOX_BASES_VIEW, InfoboxBasesView } from "src/view/bases-infobox-view";
 import { BasesHoverPreview } from "src/view/bases-hover";
-import { buildBaseConfig } from "src/model/base-config";
 import { InfoboxRenderChild } from "src/view/InfoboxRenderChild";
 import { InfoboxSettingTab } from "src/settings/SettingsTab";
-import { SAMPLE_TEMPLATES } from "src/model/sample-templates";
+import { registerScaffoldCommands } from "src/view/scaffold-commands";
 import { TemplatePickerModal } from "src/view/TemplatePickerModal";
 import { TemplateRegistry } from "src/model/template-registry";
+import { WideNoteManager } from "src/view/wide-notes";
 
 // vite `define` replacement has proven unreliable on incremental watch
 // rebuilds (rolldown alpha drops it for re-transformed modules), so read the
@@ -35,6 +27,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
   readonly templates = new TemplateRegistry(this.app, () => this.settings.templateFolder);
   private readonly basesHover = new BasesHoverPreview(this);
   private basesViewRegistered = false;
+  readonly wideNotes = new WideNoteManager(this);
 
   private readonly children = new Set<InfoboxRenderChild>();
   private styleEl: HTMLStyleElement | null = null;
@@ -85,12 +78,6 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "create-sample-templates",
-      name: "Create sample infobox templates",
-      callback: () => void this.createSampleTemplates(),
-    });
-
-    this.addCommand({
       id: "add-template-properties",
       name: "Add missing template properties to note",
       checkCallback: (checking) => {
@@ -101,16 +88,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
       },
     });
 
-    this.addCommand({
-      id: "create-base-from-folder",
-      name: "Create base from folder",
-      checkCallback: (checking) => {
-        const file = this.app.workspace.getActiveFile();
-        if (!file) return false;
-        if (!checking) void this.createBaseFromFolder(file);
-        return true;
-      },
-    });
+    registerScaffoldCommands(this);
 
     // Editing a template note live-updates every open infobox using it.
     this.registerEvent(
@@ -147,6 +125,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     this.addSettingTab(new InfoboxSettingTab(this.app, this));
     this.applySettingsCss();
     this.basesHover.register();
+    this.wideNotes.register();
     if (this.settings.basesInfoboxView) this.registerInfoboxBasesView();
   }
 
@@ -165,6 +144,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
 
   override onunload(): void {
     this.basesHover.destroy();
+    this.wideNotes.destroy();
     this.styleEl?.remove();
     this.styleEl = null;
   }
@@ -217,6 +197,7 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     this.applySettingsCss();
     this.templates.invalidate();
     this.refreshAll();
+    this.wideNotes.recomputeAll();
   }
 
   refreshAll(): void {
@@ -259,107 +240,6 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     const keys = Object.keys(frontmatter ?? {}).filter((k) => !hidden.has(k.toLowerCase()));
     const body = keys.length > 0 ? `sections:\n  Info: [${keys.join(", ")}]\n` : "";
     editor.replaceSelection(`\`\`\`infobox\n${body}\`\`\`\n`);
-  }
-
-  private async createSampleTemplates(): Promise<void> {
-    const folder = this.templates.folder();
-    // Create the folder chain level by level; createFolder rejects existing.
-    const parts = folder.split("/");
-    for (let i = 1; i <= parts.length; i++) {
-      const path = parts.slice(0, i).join("/");
-      if (!this.app.vault.getAbstractFileByPath(path)) {
-        await this.app.vault.createFolder(path).catch(() => {});
-      }
-    }
-
-    let created = 0;
-    for (const [id, content] of Object.entries(SAMPLE_TEMPLATES)) {
-      const path = `${folder}/${id}.md`;
-      if (this.app.vault.getAbstractFileByPath(path)) continue;
-      await this.app.vault.create(path, content);
-      created++;
-    }
-    new Notice(
-      created > 0
-        ? `Created ${created} sample template${created === 1 ? "" : "s"} in ${folder}/.`
-        : `All sample templates already exist in ${folder}/.`,
-    );
-  }
-
-  /**
-   * Generates an Obsidian Base (.base) from the active note's folder: detects
-   * the dominant template among the folder's notes, projects it onto a table
-   * view (traditional list) and a cards view, and writes the file. Presentation
-   * only — it reads frontmatter, never writes to the notes. See §8.1.
-   */
-  private async createBaseFromFolder(active: TFile): Promise<void> {
-    const { parent } = active;
-    const folder = parent && !parent.isRoot() ? parent.path : "";
-    const prefix = folder ? `${folder}/` : "";
-    const notes = this.app.vault
-      .getMarkdownFiles()
-      .filter((f) => (folder ? f.path.startsWith(prefix) : true));
-
-    const special = new Set(
-      [
-        this.settings.titleKey,
-        this.settings.subtitleKey,
-        this.settings.imageKey,
-        this.settings.captionKey,
-        this.settings.templateKey,
-        "tags",
-        ...this.settings.excludeKeys,
-      ].map((k) => k.toLowerCase()),
-    );
-
-    // Tally the template each note names; pick the most common as the shape.
-    const tally = new Map<string, number>();
-    const seen = new Set<string>();
-    let hasImages = false;
-    for (const note of notes) {
-      const fm = this.app.metadataCache.getFileCache(note)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
-      if (!fm) continue;
-      const id = fm[this.settings.templateKey];
-      if (typeof id === "string" && id.trim()) {
-        tally.set(id.trim(), (tally.get(id.trim()) ?? 0) + 1);
-      }
-      const image = fm[this.settings.imageKey];
-      const imageList = Array.isArray(image) ? image : [image];
-      if (imageList.some((v) => typeof v === "string" && v.trim() !== "")) hasImages = true;
-      for (const key of Object.keys(fm)) if (!special.has(key.toLowerCase())) seen.add(key);
-    }
-    const templateId = [...tally].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-    const template = templateId ? await this.templates.resolve(templateId) : null;
-
-    const config = buildBaseConfig({
-      folder,
-      template,
-      templateKey: this.settings.templateKey,
-      templateId,
-      titleKey: this.settings.titleKey,
-      imageKey: this.settings.imageKey,
-      hasImages,
-      fallbackKeys: [...seen],
-    });
-
-    const baseName = folder ? folder.slice(folder.lastIndexOf("/") + 1) : "Infobox";
-    const path = `${prefix}${baseName}.base`;
-    const existing = this.app.vault.getAbstractFileByPath(path);
-    if (existing) {
-      new Notice(`A base already exists at ${path}. Opening it.`);
-      if (existing instanceof TFile) await this.app.workspace.getLeaf(false).openFile(existing);
-      return;
-    }
-
-    const created = await this.app.vault.create(path, stringifyYaml(config));
-    await this.app.workspace.getLeaf(false).openFile(created);
-    new Notice(
-      templateId
-        ? `Created ${path} from template “${templateId}”.`
-        : `Created ${path} from ${notes.length} note${notes.length === 1 ? "" : "s"}.`,
-    );
   }
 
   /**
@@ -439,6 +319,11 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     // labelAlign is a closed union from a dropdown; no sanitizing needed.
     if (this.settings.labelAlign !== DEFAULT_SETTINGS.labelAlign) {
       decls.push(`--aib-label-align: ${this.settings.labelAlign}`);
+    }
+    // Empty wideNoteWidth means "fully unconstrained" — leave the variable out
+    // of the cascade so styles.css's var(--aib-note-width, unset) fallback wins.
+    if (this.settings.wideNoteWidth.trim() !== "") {
+      decls.push(`--aib-note-width: ${sanitizeCssLength(this.settings.wideNoteWidth, "unset")}`);
     }
     this.styleEl.textContent = decls.length > 0 ? `body { ${decls.join("; ")}; }` : "";
   }

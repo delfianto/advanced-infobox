@@ -24,6 +24,11 @@ settings:
     description: CSS length (e.g. 22em, 320px)
     type: variable-text
     default: 22em
+  - id: aib-note-width
+    title: Wide note width
+    description: Cap for notes widened past readable line length. CSS length, or "unset" for edge-to-edge.
+    type: variable-text
+    default: unset
   - id: aib-font-size
     title: Base font size
     description: CSS length the whole box scales from
@@ -231,6 +236,19 @@ settings:
   clear: both;
   width: 100%;
   margin: 0 0 1em 0;
+}
+
+/* ── Wide notes ────────────────────────────────────────────── */
+
+/* Overrides Obsidian's "Readable line length" for notes that contain an
+   infobox or an embedded Base (both read better full-width than clamped to
+   prose width) — .aib-wide is added by WideNoteManager, not by the user, so
+   it never fights the global setting for ordinary prose notes. Targets the
+   same elements Obsidian's own .is-readable-line-width rule does; !important
+   because that rule sets max-width directly (not via a variable). */
+.markdown-source-view.aib-wide .cm-sizer,
+.markdown-preview-view.aib-wide .markdown-preview-sizer {
+  max-width: var(--aib-note-width, unset) !important;
 }
 
 /* ── Density ───────────────────────────────────────────────── */
