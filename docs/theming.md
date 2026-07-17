@@ -42,9 +42,11 @@ Settings.
 > table styling (looking at you, AnuPpuccin). They still read from the `--aib-*` variables,
 > so every override path above continues to work.
 
-Images (single or the [multi-image carousel](data-model.md#images-and-the-carousel)) are
-capped at `--aib-image-max-height` (default `20em`) so a tall or oversized image never
-balloons the card. Adjust it under Style Settings → Image max height, or in a snippet.
+A single image always keeps its own natural shape. The
+[multi-image carousel](data-model.md#images-and-the-carousel) instead frames every slide at
+a fixed `--aib-image-ratio` (default `2 / 3`) so stepping between differently-shaped images
+doesn't jump the card's size; each image letterboxes inside that frame. Adjust it under
+Style Settings → Carousel image ratio, or in a snippet.
 
 ## Live Preview vs Reading view
 

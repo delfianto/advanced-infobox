@@ -53,10 +53,10 @@ settings:
     title: Image corner radius
     type: variable-text
     default: 4px
-  - id: aib-image-max-height
-    title: Image max height
+  - id: aib-image-ratio
+    title: Carousel image ratio
     type: variable-text
-    default: 20em
+    default: 2 / 3
   - id: aib-heading-typography
     title: Typography
     type: heading
@@ -323,14 +323,25 @@ settings:
   border-top: 1px solid var(--aib-divider-color, var(--background-modifier-border));
 }
 
+/* A single image always fills the card's width (tracking --aib-width instead
+   of stalling at its own natural size); height follows from the aspect ratio,
+   so a portrait image isn't pillarboxed down to a sliver by a height cap. */
 .aib-image img {
-  max-width: 100%;
-  max-height: var(--aib-image-max-height, 20em);
+  width: 100%;
   height: auto;
-  width: auto;
   display: block;
   margin: 0 auto;
   border-radius: var(--aib-image-radius, 4px);
+}
+
+/* Multi-image: an aspect-ratio frame (not a fixed pixel height) keeps every
+   slide the same shape — no layout jump stepping between differently-shaped
+   images — while still scaling with the card instead of a static height that
+   ignores --aib-width. The image is letterboxed inside it via object-fit.
+   --aib-image-ratio only applies here — a single image keeps its own shape. */
+.aib-carousel img {
+  aspect-ratio: var(--aib-image-ratio, 2 / 3);
+  object-fit: contain;
 }
 
 /* A transparent overlay button so clicking (or Enter/Space) the image opens the
@@ -349,20 +360,12 @@ settings:
   box-shadow: inset 0 0 0 2px var(--background-modifier-border-focus, #7aa2f7);
 }
 
-/* Multi-image: a fixed-height frame keeps every slide the same size (no layout
-   jump between differently-shaped images); the image is letterboxed inside it. */
-.aib-carousel img {
-  width: 100%;
-  height: var(--aib-image-max-height, 20em);
-  max-height: none;
-  object-fit: contain;
-}
-
 .aib-carousel .aib-image-missing {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--aib-image-max-height, 20em);
+  width: 100%;
+  aspect-ratio: var(--aib-image-ratio, 2 / 3);
 }
 
 /* Glyph-only chevrons: no solid pill. Scoped under .aib-infobox so it outranks
