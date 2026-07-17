@@ -49,8 +49,10 @@ image:
 - Clicking any image opens a **lightbox** — a full-size viewer with
   first / previous / next / last controls (also arrow keys, `Home` / `End`, and
   `Esc` to close).
-- Tall or oversized images are capped at `--aib-image-max-height` (default
-  `20em`) so they never stretch the card — [theme it](theming.md) to taste.
+- A single image keeps its own shape. Carousel slides share a fixed
+  `--aib-image-ratio` (default `2 / 3`) frame instead, so stepping between
+  differently-shaped images doesn't jump the card's size — [theme it](theming.md)
+  to taste.
 
 ![A character infobox whose header is a three-image carousel: a hover chevron and a "1 / 3" slide counter sit over the current image.](images/multi-image-carousel.png)
 
