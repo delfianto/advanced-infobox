@@ -20,6 +20,17 @@ for values you actually change, so the box follows your theme by default.
 | Density | Compact · **Normal** · Comfortable | Vertical padding inside the box. |
 | Visual preset | **Obsidian native** · Wikipedia classic | Native follows your theme; Wikipedia mimics the classic gray card (with a dark-mode variant). See [Theming](theming.md). |
 
+## Readable line length
+
+Obsidian's own "Readable line length" editor setting is all-or-nothing across the whole
+vault. These widen just the notes that need it instead — an infobox or an embedded
+[Base](bases.md) both read better full-width than clamped to prose width.
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| Widen infobox and Base notes | **on** | Overrides readable line length for any note containing an infobox or an embedded Base. Ordinary notes are untouched. Base-embed detection is best-effort (reads Bases' rendered markup), so it needs Bases to actually render before the note widens. |
+| Wide note width | *(empty = unconstrained)* | CSS length to cap wide notes at instead of going fully edge-to-edge, e.g. `60em`. |
+
 ## Field display
 
 | Setting | Default | Notes |

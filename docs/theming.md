@@ -42,6 +42,10 @@ Settings.
 > table styling (looking at you, AnuPpuccin). They still read from the `--aib-*` variables,
 > so every override path above continues to work.
 
+[Widened notes](settings.md#readable-line-length) cap their column at `--aib-note-width`
+(default `unset`, i.e. edge-to-edge) — also overridable in a snippet if you'd rather set it
+there than in settings.
+
 A single image always keeps its own natural shape. The
 [multi-image carousel](data-model.md#images-and-the-carousel) instead frames every slide at
 a fixed `--aib-image-ratio` (default `2 / 3`) so stepping between differently-shaped images
