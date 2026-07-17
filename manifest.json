@@ -1,7 +1,7 @@
 {
   "id": "advanced-infobox",
   "name": "Advanced Infobox",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "minAppVersion": "1.4.0",
   "description": "Wiki-style infoboxes rendered from your plain, flat frontmatter. Placement, sizing, and theming are customizable; your properties stay the single source of truth.",
   "author": "Dwi Elfianto",
