@@ -1,6 +1,6 @@
 {
   "name": "advanced-infobox",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Wiki-style infoboxes for Obsidian (https://obsidian.md) rendered from plain, flat frontmatter — your properties stay the single source of truth.",
   "keywords": [],
   "license": "MIT",
