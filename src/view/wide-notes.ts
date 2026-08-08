@@ -1,4 +1,5 @@
 import type AdvancedInfoboxPlugin from "src/main";
+import { type MarkdownView } from "obsidian";
 
 const WIDE_CLASS = "aib-wide";
 
@@ -23,6 +24,12 @@ const WIDE_CLASS = "aib-wide";
  */
 export class WideNoteManager {
   private observer: MutationObserver | null = null;
+  /**
+   * Reading view virtualizes sections outside the viewport. Remember which
+   * file qualified each pane so removing an off-screen infobox from the DOM
+   * does not make the rest of the note snap back to readable line length.
+   */
+  private readonly infoboxPaths = new WeakMap<HTMLElement, string>();
 
   constructor(private readonly plugin: AdvancedInfoboxPlugin) {}
 
@@ -39,6 +46,9 @@ export class WideNoteManager {
       this.plugin.app.workspace.on("layout-change", () => this.recomputeAll()),
     );
     this.plugin.registerEvent(this.plugin.app.workspace.on("file-open", () => this.recomputeAll()));
+    this.plugin.registerEvent(
+      this.plugin.app.metadataCache.on("changed", (file) => this.invalidate(file.path)),
+    );
     this.recomputeAll();
   }
 
@@ -51,9 +61,12 @@ export class WideNoteManager {
   }
 
   /** Called by InfoboxRenderChild after every render. */
-  recompute(fromEl: HTMLElement): void {
+  recompute(fromEl: HTMLElement, sourcePath: string): void {
     const pane = fromEl.closest<HTMLElement>(".markdown-source-view, .markdown-preview-view");
-    if (pane) this.applyTo(pane);
+    if (pane) {
+      this.infoboxPaths.set(pane, sourcePath);
+      this.applyTo(pane);
+    }
   }
 
   recomputeAll(): void {
@@ -65,8 +78,34 @@ export class WideNoteManager {
   }
 
   private applyTo(pane: HTMLElement): void {
+    const currentPath = this.sourcePath(pane);
+    const rememberedPath = this.infoboxPaths.get(pane);
+    if (currentPath !== null && rememberedPath !== undefined && currentPath !== rememberedPath) {
+      this.infoboxPaths.delete(pane);
+    }
+    const hasRememberedInfobox =
+      rememberedPath !== undefined && (currentPath === null || currentPath === rememberedPath);
     const qualifies =
-      this.plugin.settings.wideNotes && pane.querySelector(".aib-container, .bases-view") !== null;
+      this.plugin.settings.wideNotes &&
+      (hasRememberedInfobox || pane.querySelector(".aib-container, .bases-view") !== null);
     pane.classList.toggle(WIDE_CLASS, qualifies);
+  }
+
+  private invalidate(sourcePath: string): void {
+    for (const pane of document.querySelectorAll<HTMLElement>(
+      ".markdown-source-view, .markdown-preview-view",
+    )) {
+      if (this.infoboxPaths.get(pane) !== sourcePath) continue;
+      this.infoboxPaths.delete(pane);
+      pane.classList.remove(WIDE_CLASS);
+    }
+  }
+
+  private sourcePath(pane: HTMLElement): string | null {
+    for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
+      const view = leaf.view as MarkdownView;
+      if (view.containerEl.contains(pane)) return view.file?.path ?? null;
+    }
+    return null;
   }
 }
