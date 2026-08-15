@@ -2,6 +2,8 @@ import type AdvancedInfoboxPlugin from "src/main";
 import { type MarkdownView } from "obsidian";
 
 const WIDE_CLASS = "aib-wide";
+const WIDE_CONTENT_SELECTOR =
+  ".aib-container, .bases-view, .bases-embed, .block-language-base, .cm-lang-base";
 
 /**
  * Widens a note's Live Preview / Reading view content column past Obsidian's
@@ -10,8 +12,8 @@ const WIDE_CLASS = "aib-wide";
  * `InfoboxRenderChild` also calls {@link recompute} directly right after each
  * render so a freshly-added or -removed infobox takes effect immediately.
  *
- * An embedded Base renders asynchronously — `.bases-view` may not exist yet
- * when a note first opens — so a single `MutationObserver` on the whole
+ * An embedded Base renders asynchronously — its rendered elements may not
+ * exist yet when a note first opens — so a single `MutationObserver` on the whole
  * workspace (not a specific leaf) catches it whenever it actually finishes.
  * A per-leaf observer (rebound on "active-leaf-change" via the deprecated,
  * frequently-stale `workspace.activeLeaf`) used to miss this intermittently:
@@ -87,7 +89,7 @@ export class WideNoteManager {
       rememberedPath !== undefined && (currentPath === null || currentPath === rememberedPath);
     const qualifies =
       this.plugin.settings.wideNotes &&
-      (hasRememberedInfobox || pane.querySelector(".aib-container, .bases-view") !== null);
+      (hasRememberedInfobox || pane.querySelector(WIDE_CONTENT_SELECTOR) !== null);
     pane.classList.toggle(WIDE_CLASS, qualifies);
   }
 

@@ -247,6 +247,8 @@ settings:
    same elements Obsidian's own .is-readable-line-width rule does; !important
    because that rule sets max-width directly (not via a variable). */
 .markdown-source-view.aib-wide .cm-sizer,
+.markdown-source-view.aib-wide .cm-content,
+.markdown-source-view.aib-wide .cm-line,
 .markdown-preview-view.aib-wide .markdown-preview-sizer {
   max-width: var(--aib-note-width, unset) !important;
 }
