@@ -4,6 +4,37 @@ import { WideNoteManager } from "src/view/wide-notes";
 describe("WideNoteManager", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("recognizes the embedded Base wrapper before its view renders", () => {
+    const classes = new Set<string>();
+    const pane = {
+      classList: {
+        toggle: (name: string, force: boolean) => {
+          if (force) classes.add(name);
+          else classes.delete(name);
+          return force;
+        },
+      },
+      querySelector: (selector: string) =>
+        selector.includes(".bases-embed") ? ({} as Element) : null,
+    } as unknown as HTMLElement;
+    const plugin = {
+      app: {
+        workspace: {
+          getLeavesOfType: () => [],
+        },
+      },
+      settings: { wideNotes: true },
+    };
+    vi.stubGlobal("document", {
+      querySelectorAll: () => [pane],
+    });
+
+    const manager = new WideNoteManager(plugin as never);
+    manager.recomputeAll();
+
+    expect(classes.has("aib-wide")).toBe(true);
+  });
+
   it("keeps a note wide when its infobox is virtualized out of the DOM", () => {
     const classes = new Set<string>();
     const classList = {

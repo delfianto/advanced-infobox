@@ -29,7 +29,7 @@ vault. These widen just the notes that need it instead — an infobox or an embe
 | Setting | Default | Notes |
 | --- | --- | --- |
 | Widen infobox and Base notes | **on** | Overrides readable line length for any note containing an infobox or an embedded Base. Ordinary notes are untouched. Base-embed detection is best-effort (reads Bases' rendered markup), so it needs Bases to actually render before the note widens. |
-| Wide note width | *(empty = unconstrained)* | CSS length to cap wide notes at instead of going fully edge-to-edge, e.g. `60em`. |
+| Wide note width | **unconstrained** | Slider from 40em to 98em; the final position removes the cap for an edge-to-edge layout. |
 
 ## Field display
 

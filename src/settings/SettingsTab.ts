@@ -27,6 +27,17 @@ function emValue(length: string, fallback: string): number {
   return parsed > 0 ? parsed : leadingNumber(fallback);
 }
 
+const WIDE_NOTE_MIN_EM = 40;
+const WIDE_NOTE_MAX_EM = 100;
+const WIDE_NOTE_STEP_EM = 2;
+
+/** Empty is represented by the slider's final, unconstrained position. */
+function wideNoteEmValue(length: string): number {
+  if (length.trim() === "") return WIDE_NOTE_MAX_EM;
+  const parsed = emValue(length, `${WIDE_NOTE_MAX_EM}em`);
+  return Math.clamp(parsed, WIDE_NOTE_MIN_EM, WIDE_NOTE_MAX_EM);
+}
+
 export class InfoboxSettingTab extends PluginSettingTab {
   constructor(
     app: App,
@@ -195,20 +206,25 @@ export class InfoboxSettingTab extends PluginSettingTab {
         }),
       );
 
-    new Setting(containerEl)
+    const wideNoteSetting = new Setting(containerEl)
       .setName("Wide note width")
       .setDesc(
-        "CSS length to cap wide notes at (e.g. 60em). Empty = fully unconstrained, edge-to-edge.",
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("unconstrained")
-          .setValue(this.plugin.settings.wideNoteWidth)
-          .onChange(async (value) => {
-            this.plugin.settings.wideNoteWidth = value;
-            await this.plugin.saveSettings();
-          }),
+        "Cap widened notes from 40em to 98em. The final position is fully unconstrained, edge-to-edge.",
       );
+    const wideNoteValue = wideNoteSetting.controlEl.createSpan({
+      cls: "aib-slider-value",
+      text: this.plugin.settings.wideNoteWidth || "unconstrained",
+    });
+    wideNoteSetting.addSlider((slider) =>
+      slider
+        .setLimits(WIDE_NOTE_MIN_EM, WIDE_NOTE_MAX_EM, WIDE_NOTE_STEP_EM)
+        .setValue(wideNoteEmValue(this.plugin.settings.wideNoteWidth))
+        .onChange(async (value) => {
+          this.plugin.settings.wideNoteWidth = value === WIDE_NOTE_MAX_EM ? "" : `${value}em`;
+          wideNoteValue.setText(this.plugin.settings.wideNoteWidth || "unconstrained");
+          await this.plugin.saveSettings();
+        }),
+    );
 
     // ── Field display ──────────────────────────────────────────
 
