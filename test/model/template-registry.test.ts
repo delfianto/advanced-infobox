@@ -1,5 +1,5 @@
 import { type App, TFile } from "obsidian";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { TemplateRegistry } from "src/model/template-registry";
 
 interface FakeFile {

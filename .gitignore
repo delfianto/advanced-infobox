@@ -31,3 +31,4 @@ test-vault/.obsidian/core-plugins.json
 test-vault/.obsidian/plugins/advanced-infobox/*.css
 test-vault/.obsidian/plugins/advanced-infobox/*.js
 test-vault/.obsidian/plugins/advanced-infobox/*.json
+.vitest/

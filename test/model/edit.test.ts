@@ -5,7 +5,7 @@ import {
   listItemText,
   parseNumberInput,
 } from "src/model/edit";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { type FieldValue } from "src/model/values";
 
 describe("isEditableValue", () => {
