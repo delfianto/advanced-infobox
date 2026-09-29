@@ -1,5 +1,5 @@
 import { type BaseConfig, type BaseGenInput, buildBaseConfig } from "src/model/base-config";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { type InfoboxTemplate } from "src/model/template";
 
 const dnd: InfoboxTemplate = {

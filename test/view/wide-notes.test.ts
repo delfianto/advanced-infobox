@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { WideNoteManager } from "src/view/wide-notes";
 
 describe("WideNoteManager", () => {

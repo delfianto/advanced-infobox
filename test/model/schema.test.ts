@@ -1,5 +1,5 @@
 import { buildViewModel, type ViewModelInput } from "src/model/schema";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DEFAULT_SETTINGS } from "src/settings/settings";
 
 function input(overrides: Partial<ViewModelInput>): ViewModelInput {

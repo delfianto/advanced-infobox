@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { parseBlockConfig } from "src/model/block-config";
 
 describe("parseBlockConfig", () => {
