@@ -53,6 +53,33 @@ export interface ViewModelInput {
   template?: InfoboxTemplate | null;
 }
 
+export function getTemplateId(
+  frontmatter: Record<string, unknown> | undefined,
+  key: string,
+  block: BlockConfig,
+): string | undefined {
+  const value = frontmatter?.[key];
+  return block.template ?? (typeof value === "string" ? value.trim() : undefined);
+}
+
+export function resolveFieldLayout(
+  settings: InfoboxSettings,
+  block: BlockConfig,
+  template?: InfoboxTemplate | null,
+) {
+  const labels = new Map<string, string>();
+  for (const [key, label] of Object.entries(settings.labelMap)) {
+    labels.set(key.toLowerCase(), label);
+  }
+  for (const [key, label] of Object.entries(template?.labels ?? {})) {
+    labels.set(key.toLowerCase(), label);
+  }
+
+  if (block.sections) return { labels, sections: block.sections };
+  if (template?.sections.length) return { labels, sections: template.sections };
+  return { labels, sections: template?.order.length ? [{ keys: template.order }] : [] };
+}
+
 export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
   const { frontmatter, fileBasename, settings, blockConfig, template } = input;
 
@@ -78,15 +105,8 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     [...settings.excludeKeys, ...(blockConfig.exclude ?? [])].map((k) => k.toLowerCase()),
   );
 
-  // Template labels are more specific than the global map, so they win.
-  const labelOverrides = new Map(
-    Object.entries(settings.labelMap).map(([k, v]) => [k.toLowerCase(), v]),
-  );
-  for (const [k, v] of Object.entries(template?.labels ?? {})) {
-    labelOverrides.set(k.toLowerCase(), v);
-  }
-  const labelFor = (key: string): string =>
-    labelOverrides.get(key.toLowerCase()) ?? prettifyKey(key);
+  const { labels, sections: sectionSpecs } = resolveFieldLayout(settings, blockConfig, template);
+  const labelFor = (key: string): string => labels.get(key.toLowerCase()) ?? prettifyKey(key);
 
   // Insertion order mirrors the file; sections consume from this pool.
   const pool = new Map<string, InfoboxField>();
@@ -113,20 +133,10 @@ export function buildViewModel(input: ViewModelInput): InfoboxViewModel {
     return undefined;
   };
 
-  // Structure precedence: per-note block > template body sections >
-  // template frontmatter order > zero-config (single unlabeled section).
-  let sectionSpecs: { label?: string; keys: string[] }[] | undefined = blockConfig.sections;
-  if (!sectionSpecs && template) {
-    if (template.sections.length > 0) {
-      sectionSpecs = template.sections;
-    } else if (template.order.length > 0) {
-      sectionSpecs = [{ keys: template.order }];
-    }
-  }
   const unlisted = blockConfig.unlisted ?? template?.unlisted ?? "show";
 
   const sections: InfoboxSection[] = [];
-  for (const spec of sectionSpecs ?? []) {
+  for (const spec of sectionSpecs) {
     const fields: InfoboxField[] = [];
     for (const wanted of spec.keys) {
       const field = takeField(wanted);

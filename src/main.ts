@@ -204,6 +204,11 @@ export default class AdvancedInfoboxPlugin extends Plugin {
     for (const child of this.children) child.refresh();
   }
 
+  /** Read-only layout for editors that operate on the same note frontmatter. */
+  getEditorLayout(frontmatter: Record<string, unknown>, blockSource = "") {
+    return this.templates.editorLayout(frontmatter, blockSource, this.settings);
+  }
+
   private insertWithTemplate(editor: Editor): void {
     const ids = this.templates.ids();
     if (ids.length === 0) {

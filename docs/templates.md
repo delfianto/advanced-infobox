@@ -122,3 +122,16 @@ Commands (from the palette):
 
 - [TTRPG character sheets](ttrpg-example.md) — the `dnd` template driving a full 12-class roster.
 - [Data model](data-model.md) — how the values under these labels are rendered.
+
+## Layout API for companion plugins
+
+The loaded plugin instance exposes an asynchronous
+`getEditorLayout(frontmatter, blockSource?)` method. Pass the note's flat
+frontmatter and, if present, the contents of its infobox fence. It returns
+`{ labels, sections }`. Labels are keyed by lowercase property name. Each
+section has `keys` in display order and an optional `label`.
+
+The result follows the normal template and block precedence and includes
+configured label overrides. An editor can use it to arrange fields while
+keeping the note's values as the source of truth. The method returns layout
+only, so properties excluded from the rendered box can still be edited.

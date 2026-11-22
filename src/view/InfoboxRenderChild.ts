@@ -1,8 +1,8 @@
 import { type BlockConfig, parseBlockConfig } from "src/model/block-config";
+import { buildViewModel, getTemplateId } from "src/model/schema";
 import { MarkdownRenderChild, moment, Notice, TFile } from "obsidian";
 import { mount, tick, unmount } from "svelte";
 import type AdvancedInfoboxPlugin from "src/main";
-import { buildViewModel } from "src/model/schema";
 import { createMarkdownRenderer } from "src/view/markdown";
 import { type EditableValue } from "src/model/edit";
 import Infobox from "src/view/Infobox.svelte";
@@ -132,11 +132,7 @@ export class InfoboxRenderChild extends MarkdownRenderChild {
 
     // Template: per-note block option beats the flat frontmatter property.
     const warnings: string[] = [];
-    const templateId =
-      this.blockConfig.template ??
-      (typeof frontmatter?.[settings.templateKey] === "string"
-        ? (frontmatter[settings.templateKey] as string).trim()
-        : undefined);
+    const templateId = getTemplateId(frontmatter, settings.templateKey, this.blockConfig);
     let template = null;
     if (templateId) {
       template = await this.plugin.templates.resolve(templateId);

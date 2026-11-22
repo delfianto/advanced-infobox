@@ -1,5 +1,8 @@
 import { type App, normalizePath, TFile } from "obsidian";
+import { getTemplateId, resolveFieldLayout } from "src/model/schema";
 import { type InfoboxTemplate, parseTemplate, type TemplateSource } from "src/model/template";
+import { type InfoboxSettings } from "src/settings/settings";
+import { parseBlockConfig } from "src/model/block-config";
 
 /**
  * Resolves template ids to parsed templates. Templates are ordinary notes in
@@ -40,6 +43,21 @@ export class TemplateRegistry {
       .filter((f) => f.path.startsWith(folder))
       .map((f) => f.basename)
       .toSorted();
+  }
+
+  async editorLayout(
+    frontmatter: Record<string, unknown>,
+    blockSource: string,
+    settings: InfoboxSettings,
+  ) {
+    const { config } = parseBlockConfig(blockSource);
+    const templateId = getTemplateId(frontmatter, settings.templateKey, config);
+    const template = templateId ? await this.resolve(templateId) : null;
+    const { labels, sections } = resolveFieldLayout(settings, config, template);
+    return {
+      labels: Object.fromEntries(labels),
+      sections: sections.map(({ label, keys }) => ({ label, keys: [...keys] })),
+    };
   }
 
   /** Returns null when the template note does not exist. */
